@@ -1,9 +1,6 @@
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+﻿import type { Metadata } from 'next';
 import './globals.css';
 import { Navbar } from '@/components/layout/Navbar';
-
-const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
@@ -20,7 +17,7 @@ export default function RootLayout({
     <html lang="en" className="dark" suppressHydrationWarning>
       <body
         suppressHydrationWarning
-        className={`${inter.className} min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col antialiased selection:bg-cyan-500 selection:text-black`}
+        className="min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col antialiased selection:bg-cyan-500 selection:text-black font-sans"
       >
         <Navbar />
         <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">

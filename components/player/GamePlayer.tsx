@@ -2,6 +2,7 @@
 
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Game } from '@/types/game';
+import { useGameBridge } from '@/hooks/useGameBridge';
 
 interface GamePlayerProps {
   game: Game;
@@ -12,6 +13,17 @@ export function GamePlayer({ game }: GamePlayerProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPortraitMobile, setIsPortraitMobile] = useState(false);
+  const [liveScore, setLiveScore] = useState<number | null>(null);
+
+  // Connect secure postMessage bridge with origin validation
+  useGameBridge({
+    onScoreUpdate: (score) => {
+      setLiveScore(score);
+    },
+    onGameOver: (finalScore) => {
+      setLiveScore(finalScore);
+    },
+  });
 
   useEffect(() => {
     // 1. Cross-browser fullscreen state synchronization
@@ -85,6 +97,7 @@ export function GamePlayer({ game }: GamePlayerProps) {
 
   const handleRestart = (e: React.SyntheticEvent) => {
     e.preventDefault();
+    setLiveScore(0);
     if (iframeRef.current) {
       iframeRef.current.src = game.entryUrl;
     }
@@ -181,10 +194,20 @@ export function GamePlayer({ game }: GamePlayerProps) {
 
       {/* Mobile-First Action Bar */}
       <div className="mx-4 sm:mx-0 flex items-center justify-between rounded-lg border border-slate-800/80 bg-slate-900/70 px-3.5 py-2 sm:px-4 sm:py-2.5 backdrop-blur-sm">
-        <div className="flex items-center gap-2 text-xs text-slate-400">
-          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="hidden sm:inline">Secure Sandbox</span>
-          <span className="sm:hidden font-medium text-slate-300">Live Arcade</span>
+        
+        {/* Status & Live Score Display */}
+        <div className="flex items-center gap-3 text-xs text-slate-400">
+          <div className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="hidden sm:inline">Secure Sandbox</span>
+          </div>
+
+          {liveScore !== null && (
+            <div className="flex items-center gap-1.5 rounded bg-slate-800 px-2 py-0.5 border border-slate-700 font-mono text-cyan-400 font-bold">
+              <span>SCORE:</span>
+              <span className="text-white">{liveScore}</span>
+            </div>
+          )}
         </div>
 
         {/* Action Controls */}
@@ -218,6 +241,7 @@ export function GamePlayer({ game }: GamePlayerProps) {
             <span>{isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}</span>
           </button>
         </div>
+
       </div>
     </div>
   );

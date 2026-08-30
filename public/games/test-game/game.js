@@ -83,6 +83,7 @@ canvas.addEventListener('touchend', () => {
 });
 
 // --- UPDATE LOGIC ---
+// --- UPDATE LOGIC ---
 function update() {
   if (keys['ArrowUp'] || keys['w'] || keys['W']) player.y -= player.speed;
   if (keys['ArrowDown'] || keys['s'] || keys['S']) player.y += player.speed;
@@ -96,12 +97,26 @@ function update() {
   const dy = player.y - gem.y;
   const distance = Math.sqrt(dx * dx + dy * dy);
 
+  // When player collects a gem:
   if (distance < player.size + gem.size) {
     score += 10;
     gem.x = Math.random() * (canvas.width - 40) + 20;
     gem.y = Math.random() * (canvas.height - 40) + 20;
+
+    // 🚀 STEP 3: Send live score to parent portal via secure postMessage
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage(
+        {
+          type: 'SCORE_UPDATE',
+          payload: { score: score },
+          timestamp: Date.now()
+        },
+        '*'
+      );
+    }
   }
 }
+
 
 // --- RENDER LOGIC ---
 function draw() {
