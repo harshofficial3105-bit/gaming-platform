@@ -19,10 +19,11 @@ export async function generateStaticParams() {
   }));
 }
 
-// 2. Dynamic SEO Metadata Generation
+// 2. Dynamic SEO Metadata Generation (OpenGraph + Twitter + Canonical)
 export async function generateMetadata({ params }: GamePageProps): Promise<Metadata> {
   const { slug } = await params;
   const game = getGameBySlug(slug);
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
   if (!game) {
     return {
@@ -30,25 +31,82 @@ export async function generateMetadata({ params }: GamePageProps): Promise<Metad
     };
   }
 
+  const pageUrl = `${baseUrl}/games/${game.slug}`;
+
   return {
-    title: `${game.title} — Play Online Free on ArcadeHub`,
+    title: `${game.title} — Play Free Online on ArcadeHub`,
     description: game.description,
+    alternates: {
+      canonical: pageUrl,
+    },
+    openGraph: {
+      title: `${game.title} — Free Online HTML5 Game`,
+      description: game.description,
+      url: pageUrl,
+      siteName: 'ArcadeHub',
+      images: [
+        {
+          url: game.thumbnailUrl,
+          width: 800,
+          height: 500,
+          alt: `${game.title} Game Preview`,
+        },
+      ],
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${game.title} — Play Now Free`,
+      description: game.description,
+      images: [game.thumbnailUrl],
+    },
   };
 }
 
-// 3. Dynamic Page View
+// 3. Dynamic Page View + Schema.org JSON-LD Structured Data
 export default async function GamePage({ params }: GamePageProps) {
   const { slug } = await params;
   const game = getGameBySlug(slug);
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
-  // If game slug does not exist, trigger Next.js 404 page
   if (!game) {
     notFound();
   }
 
+  // Schema.org VideoGame Structured Data Specification
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'VideoGame',
+    name: game.title,
+    description: game.description,
+    genre: [game.category, ...game.tags],
+    gamePlatform: ['Web Browser', 'HTML5', 'Desktop', 'Mobile'],
+    applicationCategory: 'Game',
+    operatingSystem: 'Any',
+    url: `${baseUrl}/games/${game.slug}`,
+    image: `${baseUrl}${game.thumbnailUrl}`,
+    author: {
+      '@type': 'Person',
+      name: game.developer.name,
+      url: game.developer.websiteUrl,
+    },
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'USD',
+      availability: 'https://schema.org/InStock',
+    },
+  };
+
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
       
+      {/* Inject Structured Data for Search Engine Crawlers */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       {/* Breadcrumb Navigation */}
       <nav className="flex items-center gap-2 text-xs text-slate-400">
         <Link href="/" className="hover:text-cyan-400 transition-colors">Home</Link>
@@ -105,6 +163,10 @@ export default async function GamePage({ params }: GamePageProps) {
             <div className="flex justify-between">
               <span className="text-slate-400">Resolution:</span>
               <span className="text-slate-300">{game.dimensions.width} × {game.dimensions.height}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-400">Price:</span>
+              <span className="font-semibold text-emerald-400">Free / Instant</span>
             </div>
           </div>
 
