@@ -3,6 +3,7 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Game } from '@/types/game';
 import { useGameBridge } from '@/hooks/useGameBridge';
+import { guestVault } from '@/lib/storage/guestVault';
 
 interface GamePlayerProps {
   game: Game;
@@ -13,15 +14,32 @@ export function GamePlayer({ game }: GamePlayerProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPortraitMobile, setIsPortraitMobile] = useState(false);
-  const [liveScore, setLiveScore] = useState<number | null>(null);
+  const [liveScore, setLiveScore] = useState<number>(0);
+  const [bestScore, setBestScore] = useState<number>(0);
 
-  // Connect secure postMessage bridge with origin validation
+  // Initialize best score from Local Guest Vault on mount
+  useEffect(() => {
+    const saved = guestVault.loadProgress(game.id);
+    if (saved && typeof saved.highScore === 'number') {
+      setBestScore(saved.highScore);
+    }
+  }, [game.id]);
+
+  // Connect secure postMessage bridge with anonymous guest vault persistence
   useGameBridge({
+    gameId: game.id,
     onScoreUpdate: (score) => {
       setLiveScore(score);
+      setBestScore((prev) => Math.max(prev, score));
+    },
+    onSaveState: (state) => {
+      if (typeof state.highScore === 'number') {
+        setBestScore(state.highScore);
+      }
     },
     onGameOver: (finalScore) => {
       setLiveScore(finalScore);
+      setBestScore((prev) => Math.max(prev, finalScore));
     },
   });
 
@@ -192,22 +210,27 @@ export function GamePlayer({ game }: GamePlayerProps) {
         />
       </div>
 
-      {/* Mobile-First Action Bar */}
+      {/* Action Bar */}
       <div className="mx-4 sm:mx-0 flex items-center justify-between rounded-lg border border-slate-800/80 bg-slate-900/70 px-3.5 py-2 sm:px-4 sm:py-2.5 backdrop-blur-sm">
         
-        {/* Status & Live Score Display */}
-        <div className="flex items-center gap-3 text-xs text-slate-400">
-          <div className="flex items-center gap-1.5">
+        {/* Status & Live Score / Best Score Display */}
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-400">
             <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="hidden sm:inline">Secure Sandbox</span>
+            <span>Sandbox Active</span>
           </div>
 
-          {liveScore !== null && (
-            <div className="flex items-center gap-1.5 rounded bg-slate-800 px-2 py-0.5 border border-slate-700 font-mono text-cyan-400 font-bold">
-              <span>SCORE:</span>
-              <span className="text-white">{liveScore}</span>
+          <div className="flex items-center gap-2 font-mono text-xs">
+            <div className="flex items-center gap-1.5 rounded bg-slate-800/90 px-2.5 py-1 border border-slate-700">
+              <span className="text-slate-400 font-sans text-[11px] font-semibold uppercase tracking-wider">Score:</span>
+              <span className="font-bold text-white">{liveScore}</span>
             </div>
-          )}
+
+            <div className="flex items-center gap-1.5 rounded bg-cyan-950/50 px-2.5 py-1 border border-cyan-500/30 text-cyan-400">
+              <span className="text-cyan-400/80 font-sans text-[11px] font-semibold uppercase tracking-wider">Best:</span>
+              <span className="font-bold text-cyan-300">{bestScore}</span>
+            </div>
+          </div>
         </div>
 
         {/* Action Controls */}

@@ -3,9 +3,40 @@ const ctx = canvas.getContext('2d');
 
 // --- GAME STATE ---
 let score = 0;
+let highScore = 0;
+let isLoaded = false;
 let gameOver = false;
 let touchActive = false;
 let touchPos = { x: 0, y: 0 };
+
+// 1. Receive restored progress from Portal
+window.addEventListener('message', (e) => {
+  const envelope = e.data;
+  const data = envelope?.data || envelope;
+  if (data?.type === 'LOAD_PROGRESS_RESPONSE' && data.payload) {
+    isLoaded = true;
+    if (typeof data.payload.highScore === 'number') {
+      highScore = Math.max(highScore, data.payload.highScore);
+    }
+  }
+});
+
+// 2. Announce SDK readiness to Portal and request saved state
+function sendHandshake() {
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'SDK_READY', version: '1.0' }, '*');
+    window.parent.postMessage({ type: 'REQUEST_LOAD_PROGRESS' }, '*');
+  }
+}
+sendHandshake();
+// Retry handshake until acknowledged
+const handshakeInterval = setInterval(() => {
+  if (isLoaded) {
+    clearInterval(handshakeInterval);
+  } else {
+    sendHandshake();
+  }
+}, 200);
 
 // Player Object
 const player = {
@@ -83,7 +114,6 @@ canvas.addEventListener('touchend', () => {
 });
 
 // --- UPDATE LOGIC ---
-// --- UPDATE LOGIC ---
 function update() {
   if (keys['ArrowUp'] || keys['w'] || keys['W']) player.y -= player.speed;
   if (keys['ArrowDown'] || keys['s'] || keys['S']) player.y += player.speed;
@@ -100,10 +130,16 @@ function update() {
   // When player collects a gem:
   if (distance < player.size + gem.size) {
     score += 10;
+    
+    // Only update high score if current score exceeds previous all-time best
+    if (score > highScore) {
+      highScore = score;
+    }
+
     gem.x = Math.random() * (canvas.width - 40) + 20;
     gem.y = Math.random() * (canvas.height - 40) + 20;
 
-    // 🚀 STEP 3: Send live score to parent portal via secure postMessage
+    // Send score and save high score to Guest Vault
     if (window.parent && window.parent !== window) {
       window.parent.postMessage(
         {
@@ -113,10 +149,19 @@ function update() {
         },
         '*'
       );
+
+      // Auto-save high score to local vault
+      window.parent.postMessage(
+        {
+          type: 'SAVE_PROGRESS',
+          payload: { data: { highScore: highScore } },
+          timestamp: Date.now()
+        },
+        '*'
+      );
     }
   }
 }
-
 
 // --- RENDER LOGIC ---
 function draw() {
@@ -151,10 +196,14 @@ function draw() {
   ctx.fill();
   ctx.restore();
 
-  // 4. Draw Score HUD
+  // 4. Draw Score HUD (Live Score + Persistent Best Score)
   ctx.fillStyle = '#ffffff';
   ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, sans-serif';
   ctx.fillText(`SCORE: ${score}`, 24, 36);
+
+  ctx.fillStyle = '#38bdf8';
+  ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, sans-serif';
+  ctx.fillText(`BEST: ${highScore}`, 24, 62);
 }
 
 function gameLoop() {
