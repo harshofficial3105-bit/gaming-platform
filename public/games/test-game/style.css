@@ -2,33 +2,39 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  user-select: none; /* Prevents text highlighting when clicking rapidly */
+  user-select: none;
 }
 
-body {
+html, body {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
   background-color: #0b0f19;
   color: #ffffff;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  overflow: hidden;
+  overflow: hidden !important;
+  touch-action: none;
 }
 
 #game-container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  border-radius: 8px;
   overflow: hidden;
-  border: 1px solid #1e293b;
 }
 
 canvas {
   display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
   background: radial-gradient(circle at center, #1a2238 0%, #0d111a 100%);
-  /* touch-action: none is CRITICAL: it prevents the browser from scrolling/refreshing when swiping */
   touch-action: none;
 }

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -11,7 +11,6 @@ interface GamePageProps {
   }>;
 }
 
-// 1. Pre-generate all game routes at build time (SSG)
 export async function generateStaticParams() {
   const games = getAllGames();
   return games.map((game) => ({
@@ -19,7 +18,6 @@ export async function generateStaticParams() {
   }));
 }
 
-// 2. Dynamic SEO Metadata Generation (OpenGraph + Twitter + Canonical)
 export async function generateMetadata({ params }: GamePageProps): Promise<Metadata> {
   const { slug } = await params;
   const game = getGameBySlug(slug);
@@ -27,20 +25,20 @@ export async function generateMetadata({ params }: GamePageProps): Promise<Metad
 
   if (!game) {
     return {
-      title: 'Game Not Found — ArcadeHub',
+      title: 'Game Not Found - ArcadeHub',
     };
   }
 
   const pageUrl = `${baseUrl}/games/${game.slug}`;
 
   return {
-    title: `${game.title} — Play Free Online on ArcadeHub`,
+    title: `${game.title} - Play Free Online on ArcadeHub`,
     description: game.description,
     alternates: {
       canonical: pageUrl,
     },
     openGraph: {
-      title: `${game.title} — Free Online HTML5 Game`,
+      title: `${game.title} - Free Online HTML5 Game`,
       description: game.description,
       url: pageUrl,
       siteName: 'ArcadeHub',
@@ -56,14 +54,13 @@ export async function generateMetadata({ params }: GamePageProps): Promise<Metad
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${game.title} — Play Now Free`,
+      title: `${game.title} - Play Now Free`,
       description: game.description,
       images: [game.thumbnailUrl],
     },
   };
 }
 
-// 3. Dynamic Page View + Schema.org JSON-LD Structured Data
 export default async function GamePage({ params }: GamePageProps) {
   const { slug } = await params;
   const game = getGameBySlug(slug);
@@ -73,7 +70,6 @@ export default async function GamePage({ params }: GamePageProps) {
     notFound();
   }
 
-  // Schema.org VideoGame Structured Data Specification
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'VideoGame',
@@ -99,9 +95,8 @@ export default async function GamePage({ params }: GamePageProps) {
   };
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto">
-      
-      {/* Inject Structured Data for Search Engine Crawlers */}
+    <section className="space-y-8 max-w-5xl mx-auto">
+      {/* Structured Data Script */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -123,7 +118,6 @@ export default async function GamePage({ params }: GamePageProps) {
 
       {/* Game Details & Instructions Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
-        
         {/* Left Column: Description & Controls */}
         <div className="md:col-span-2 space-y-6">
           <div className="space-y-2">
@@ -136,8 +130,8 @@ export default async function GamePage({ params }: GamePageProps) {
           </div>
 
           <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5 space-y-2">
-            <h2 className="text-sm font-bold text-white uppercase tracking-wider text-cyan-400 flex items-center gap-2">
-              🕹️ How To Play / Controls
+            <h2 className="text-sm font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-2">
+              <span>How To Play / Controls</span>
             </h2>
             <p className="text-xs text-slate-300 leading-relaxed">
               {game.controls}
@@ -162,7 +156,7 @@ export default async function GamePage({ params }: GamePageProps) {
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">Resolution:</span>
-              <span className="text-slate-300">{game.dimensions.width} × {game.dimensions.height}</span>
+              <span className="text-slate-300">{game.dimensions.width} x {game.dimensions.height}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">Price:</span>
@@ -185,9 +179,7 @@ export default async function GamePage({ params }: GamePageProps) {
             </div>
           </div>
         </div>
-
       </div>
-
-    </div>
+    </section>
   );
 }

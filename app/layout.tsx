@@ -6,6 +6,7 @@ import { Navbar } from '@/components/layout/Navbar';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
   title: 'ArcadeHub — Free HTML5 Browser Games',
   description: 'Play high-performance, instant HTML5 browser games on desktop and mobile with zero downloads and zero friction.',
 };
@@ -16,8 +17,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${inter.className} min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col antialiased selection:bg-cyan-500 selection:text-black`}>
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <body
+        suppressHydrationWarning
+        className={`${inter.className} min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col antialiased selection:bg-cyan-500 selection:text-black`}
+      >
         <Navbar />
         <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {children}
