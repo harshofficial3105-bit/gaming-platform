@@ -8,6 +8,8 @@ export async function createClient() {
   const cookieStore = await cookies();
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder-project.supabase.co';
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key';
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || '';
+  const isCustomDomain = appUrl.includes('arcadehub.in');
 
   return createServerClient(url, anonKey, {
     cookies: {
@@ -19,8 +21,8 @@ export async function createClient() {
           cookiesToSet.forEach(({ name, value, options }) =>
             cookieStore.set(name, value, {
               ...options,
-              // Scoped to parent domain in production for subdomain SSO
-              domain: process.env.NODE_ENV === 'production' ? '.arcadehub.in' : undefined,
+              // Only scope to parent domain if custom domain is active
+              domain: isCustomDomain ? '.arcadehub.in' : undefined,
               sameSite: 'lax',
               secure: process.env.NODE_ENV === 'production',
             })
