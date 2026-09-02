@@ -1,9 +1,12 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "arcadehub",
+  "name": "gaming-platform",
   "compatibility_date": "2026-09-01",
   "compatibility_flags": [
     "nodejs_compat"
   ],
-  "pages_build_output_dir": ".vercel/output/static"
+  "pages_build_output_dir": ".next",
+  "assets": {
+    "directory": ".next"
+  }
 }
