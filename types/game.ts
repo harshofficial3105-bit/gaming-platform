@@ -4,9 +4,24 @@ export type GameCategory =
   | 'puzzle'
   | 'strategy'
   | 'sports'
+  | 'racing'
+  | 'adventure'
   | 'casual';
 
 export type GameOrientation = 'landscape' | 'portrait' | 'any';
+
+// Intent & Hardware Compatibility Types
+export type PlayMood = 'quick' | 'challenging' | 'relaxing' | 'competitive';
+export type InputMethod = 'touch' | 'keyboard' | 'mouse' | 'gamepad';
+
+export interface LeaderboardConfig {
+  enabled: boolean;
+  scoreType: 'highest' | 'lowest';
+  scoringMode: 'points' | 'time' | 'distance';
+  maxRatePerSec?: number;
+  minDurationSeconds?: number;
+  unitLabel?: string;
+}
 
 export interface Game {
   id: string;
@@ -29,4 +44,14 @@ export interface Game {
   controls: string;
   isFeatured?: boolean;
   publishedAt: string;
+
+  // Extended Intent & Compatibility Metadata
+  playTimeMinutes: number;
+  moods: PlayMood[];
+  inputs: InputMethod[];
+  isMobileFriendly: boolean;
+  featuredBadge?: string;
+
+  // Dynamic Leaderboard & Anti-Cheat Metadata
+  leaderboard?: LeaderboardConfig;
 }

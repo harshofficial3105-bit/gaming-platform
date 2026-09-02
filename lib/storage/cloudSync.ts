@@ -1,40 +1,42 @@
-﻿import { guestVault } from './guestVault';
+import { guestVault, GameSaveEnvelope } from './guestVault';
 
-export const cloudSync = {
-  /**
-   * Migrate all local guest saves to the user's Supabase account
-   */
-  async syncGuestVaultToCloud(accessToken: string): Promise<{ synced: number; errors: number }> {
-    const saves = guestVault.getAllSaves();
-    let synced = 0;
-    let errors = 0;
+/**
+ * Synchronizes local guest saves to the remote PostgreSQL cloud storage
+ */
+export async function syncGuestVaultToCloud(jwtToken?: string): Promise<{ success: boolean; syncedCount: number }> {
+  if (typeof window === 'undefined') {
+    return { success: false, syncedCount: 0 };
+  }
 
-    for (const save of saves) {
-      try {
-        const res = await fetch('/api/games/save', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({
-            gameId: save.gameId,
-            saveData: save.data,
-            version: save.version,
-          }),
-        });
+  const allSaves: GameSaveEnvelope[] = guestVault.getAllSaves();
+  if (allSaves.length === 0) {
+    return { success: true, syncedCount: 0 };
+  }
 
-        if (res.ok) {
-          synced++;
-        } else {
-          errors++;
-        }
-      } catch (err) {
-        console.warn(`[CloudSync] Failed to sync ${save.gameId}:`, err);
-        errors++;
+  let synced = 0;
+
+  for (const save of allSaves) {
+    try {
+      const res = await fetch('/api/games/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(jwtToken ? { Authorization: `Bearer ${jwtToken}` } : {}),
+        },
+        body: JSON.stringify({
+          gameId: save.gameId,
+          score: typeof save.data?.highScore === 'number' ? save.data.highScore : 0,
+          customData: save.data,
+        }),
+      });
+
+      if (res.ok) {
+        synced++;
       }
+    } catch (err) {
+      console.warn(`[CloudSync] Failed to sync save for ${save.gameId}:`, err);
     }
+  }
 
-    return { synced, errors };
-  },
-};
+  return { success: true, syncedCount: synced };
+}

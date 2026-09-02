@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#12042b"/>
+      <stop offset="50%" stop-color="#3b0764"/>
+      <stop offset="100%" stop-color="#050811"/>
+    </linearGradient>
+    <linearGradient id="road" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+    <linearGradient id="sun" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ff007f"/>
+      <stop offset="100%" stop-color="#fbbf24"/>
+    </linearGradient>
+    <filter id="neon">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  <rect width="800" height="300" fill="url(#sky)"/>
+  <circle cx="400" cy="200" r="90" fill="url(#sun)" filter="url(#neon)"/>
+  <!-- Synthwave Grid Horizon -->
+  <polygon points="100,500 700,500 450,260 350,260" fill="url(#road)" stroke="#00f0ff" stroke-width="2"/>
+  <line x1="400" y1="260" x2="400" y2="500" stroke="#ff007f" stroke-width="4" stroke-dasharray="20,15"/>
+  <!-- Speed Lines -->
+  <line x1="200" y1="360" x2="150" y2="460" stroke="#00f0ff" stroke-width="3" opacity="0.6"/>
+  <line x1="600" y1="360" x2="650" y2="460" stroke="#00f0ff" stroke-width="3" opacity="0.6"/>
+  <!-- Supercar Silhouette -->
+  <path d="M340 400 Q400 370 460 400 L475 425 Q400 435 325 425 Z" fill="#00f0ff" filter="url(#neon)"/>
+  <rect x="365" y="415" width="70" height="8" fill="#ff007f" filter="url(#neon)"/>
+  <!-- Title Badge -->
+  <rect x="250" y="440" width="300" height="42" rx="10" fill="#0b1120" stroke="#ff007f" stroke-width="1.5"/>
+  <text x="400" y="468" font-family="monospace" font-size="18" font-weight="900" fill="#ff007f" text-anchor="middle" letter-spacing="3">SPEED RACING 3D</text>
+</svg>

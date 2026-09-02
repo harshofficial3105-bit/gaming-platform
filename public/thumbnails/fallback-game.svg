@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="100%" height="100%">
+  <defs>
+    <radialGradient id="fbBg" cx="50%" cy="50%" r="75%">
+      <stop offset="0%" stop-color="#1e1b4b"/>
+      <stop offset="100%" stop-color="#050811"/>
+    </radialGradient>
+    <filter id="cyanGlow"><feGaussianBlur stdDeviation="8" result="blur"/><feComposite in="SourceGraphic" in2="blur" operator="over"/></filter>
+  </defs>
+  <rect width="800" height="500" fill="url(#fbBg)"/>
+  <rect x="40" y="30" width="720" height="440" rx="20" fill="none" stroke="#1e2d4a" stroke-width="2" stroke-dasharray="12,8"/>
+  <circle cx="400" cy="210" r="60" fill="#0b1120" stroke="#00f0ff" stroke-width="2" filter="url(#cyanGlow)"/>
+  <text x="400" y="225" font-family="monospace" font-size="42" fill="#00f0ff" text-anchor="middle">⚡</text>
+  <text x="400" y="320" font-family="monospace" font-size="24" font-weight="bold" fill="#ffffff" text-anchor="middle" letter-spacing="4">ARCADEHUB GAME PORTAL</text>
+  <text x="400" y="355" font-family="sans-serif" font-size="14" fill="#94a3b8" text-anchor="middle">Instant 60 FPS HTML5 Browser Game</text>
+</svg>

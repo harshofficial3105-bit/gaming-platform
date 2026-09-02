@@ -1,12 +1,13 @@
-﻿'use client';
+'use client';
 
-import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { Game } from '@/types/game';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { ExtendedGame } from '@/lib/games';
 import { useGameBridge } from '@/hooks/useGameBridge';
-import { guestVault } from '@/lib/storage/guestVault';
+import { isFavorite, toggleFavorite } from '@/lib/storage/favorites';
+import { isLiked, toggleLike } from '@/lib/storage/likes';
 
 interface GamePlayerProps {
-  game: Game;
+  game: ExtendedGame;
 }
 
 export function GamePlayer({ game }: GamePlayerProps) {
@@ -14,85 +15,93 @@ export function GamePlayer({ game }: GamePlayerProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPortraitMobile, setIsPortraitMobile] = useState(false);
-  const [liveScore, setLiveScore] = useState<number>(0);
-  const [bestScore, setBestScore] = useState<number>(0);
+  const [isSoundOn, setIsSoundOn] = useState(true);
+  const [bookmarked, setBookmarked] = useState(false);
+  const [liked, setLiked] = useState(false);
 
-  // Initialize best score from Local Guest Vault on mount
-  useEffect(() => {
-    const saved = guestVault.loadProgress(game.id);
-    if (saved && typeof saved.highScore === 'number') {
-      setBestScore(saved.highScore);
+  // Initialize Sandbox Iframe Storage & Handshake Bridge
+  useGameBridge({ gameId: game.id });
+
+  const sendBestScoreToIframe = useCallback(() => {
+    const directBest = Number(localStorage.getItem(`arcadehub_game_${game.id}_best_score`) || 0);
+    if (iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.postMessage({
+        type: 'ARCADEHUB_LOAD_BEST_SCORE',
+        gameId: game.id,
+        score: directBest,
+      }, '*');
     }
   }, [game.id]);
 
-  // Connect secure postMessage bridge with anonymous guest vault persistence
-  useGameBridge({
-    gameId: game.id,
-    onScoreUpdate: (score) => {
-      setLiveScore(score);
-      setBestScore((prev) => Math.max(prev, score));
-    },
-    onSaveState: (state) => {
-      if (typeof state.highScore === 'number') {
-        setBestScore(state.highScore);
-      }
-    },
-    onGameOver: (finalScore) => {
-      setLiveScore(finalScore);
-      setBestScore((prev) => Math.max(prev, finalScore));
-    },
-  });
+  // Sync bookmark and liked states
+  const syncSocialStates = useCallback(() => {
+    setBookmarked(isFavorite(game.id));
+    setLiked(isLiked(game.id));
+  }, [game.id]);
 
   useEffect(() => {
-    // 1. Cross-browser fullscreen state synchronization
+    syncSocialStates();
+
+    window.addEventListener('arcadehub_favorites_updated', syncSocialStates);
+    window.addEventListener('arcadehub_likes_updated', syncSocialStates);
+    window.addEventListener('arcadehub_rating_updated', syncSocialStates);
+    window.addEventListener('arcadehub_auth_changed', syncSocialStates);
+    return () => {
+      window.removeEventListener('arcadehub_favorites_updated', syncSocialStates);
+      window.removeEventListener('arcadehub_likes_updated', syncSocialStates);
+      window.removeEventListener('arcadehub_rating_updated', syncSocialStates);
+      window.removeEventListener('arcadehub_auth_changed', syncSocialStates);
+    };
+  }, [syncSocialStates]);
+
+  useEffect(() => {
     const handleFullscreenChange = () => {
-      const isFs = Boolean(
+      const isCurrentlyFullscreen = Boolean(
         document.fullscreenElement ||
         (document as unknown as { webkitFullscreenElement?: Element }).webkitFullscreenElement ||
         (document as unknown as { mozFullScreenElement?: Element }).mozFullScreenElement
       );
-      setIsFullscreen(isFs);
+      setIsFullscreen(isCurrentlyFullscreen);
     };
 
-    // 2. Mobile Device Orientation Detection
     const checkOrientation = () => {
-      const isMobile = window.innerWidth < 768 || window.matchMedia('(pointer: coarse)').matches;
-      const isPortrait = window.matchMedia('(orientation: portrait)').matches;
-      setIsPortraitMobile(isMobile && isPortrait && game.orientation === 'landscape');
+      const isPortrait = window.innerHeight > window.innerWidth;
+      const isMobile = window.innerWidth <= 768;
+      setIsPortraitMobile(game.orientation === 'landscape' && isPortrait && isMobile);
     };
 
-    checkOrientation();
-    const mediaQuery = window.matchMedia('(orientation: portrait)');
-    mediaQuery.addEventListener('change', checkOrientation);
-    window.addEventListener('resize', checkOrientation);
-
-    // 3. Global Scroll-Lock on Game Keys
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
-        return;
-      }
+      const activeEl = document.activeElement;
+      const isIframeFocused = activeEl === iframeRef.current || activeEl?.tagName === 'IFRAME';
+      const isContainerFocused = containerRef.current?.contains(activeEl);
 
-      const scrollKeys = ['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
-      if (scrollKeys.includes(e.code) || [' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+      if (isIframeFocused || isContainerFocused || isFullscreen) {
+        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', ' '].includes(e.key) || e.keyCode === 32) {
+          e.preventDefault();
+        }
+      }
+    };
+
+    const handleWheel = (e: WheelEvent) => {
+      if (isFullscreen) {
         e.preventDefault();
       }
     };
 
-    // 4. Container wheel trap
-    const container = containerRef.current;
-    const handleWheel = (e: WheelEvent) => {
-      e.preventDefault();
-    };
+    checkOrientation();
 
-    if (container) {
-      container.addEventListener('wheel', handleWheel, { passive: false });
-    }
-
+    const mediaQuery = window.matchMedia('(orientation: portrait)');
+    mediaQuery.addEventListener('change', checkOrientation);
+    window.addEventListener('resize', checkOrientation);
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
     document.addEventListener('mozfullscreenchange', handleFullscreenChange);
-    window.addEventListener('keydown', handleGlobalKeyDown, { capture: true, passive: false });
+    window.addEventListener('keydown', handleGlobalKeyDown, { capture: true });
+
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener('wheel', handleWheel, { passive: false });
+    }
 
     return () => {
       if (container) {
@@ -105,7 +114,7 @@ export function GamePlayer({ game }: GamePlayerProps) {
       document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
       window.removeEventListener('keydown', handleGlobalKeyDown, { capture: true });
     };
-  }, [game.orientation]);
+  }, [game.orientation, isFullscreen]);
 
   const handleFocus = () => {
     if (iframeRef.current?.contentWindow) {
@@ -115,19 +124,21 @@ export function GamePlayer({ game }: GamePlayerProps) {
 
   const handleRestart = (e: React.SyntheticEvent) => {
     e.preventDefault();
-    setLiveScore(0);
     if (iframeRef.current) {
-      iframeRef.current.src = game.entryUrl;
+      iframeRef.current.src = `${game.entryUrl}?v=${Date.now()}`;
     }
   };
 
-  // Instant down-stroke fullscreen toggle
-  const toggleFullscreen = useCallback((e?: React.SyntheticEvent) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
+  const toggleSound = (e: React.SyntheticEvent) => {
+    e.preventDefault();
+    const nextState = !isSoundOn;
+    setIsSoundOn(nextState);
+    if (iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.postMessage({ type: 'MUTE_AUDIO', isMuted: !nextState }, '*');
     }
+  };
 
+  const toggleFullscreen = useCallback(() => {
     const elem = containerRef.current as (HTMLDivElement & {
       webkitRequestFullscreen?: () => Promise<void>;
       mozRequestFullScreen?: () => Promise<void>;
@@ -158,41 +169,49 @@ export function GamePlayer({ game }: GamePlayerProps) {
     }
   }, []);
 
+  const handleBookmarkToggle = () => {
+    const next = toggleFavorite(game.id);
+    setBookmarked(next);
+  };
+
+  const handleLikeToggle = () => {
+    const next = toggleLike(game.id);
+    setLiked(next);
+  };
+
+  const gameWidth = game.dimensions?.width || 800;
+  const gameHeight = game.dimensions?.height || 500;
   const aspectRatioStyle = {
-    aspectRatio: `${game.dimensions.width} / ${game.dimensions.height}`,
+    aspectRatio: `${gameWidth} / ${gameHeight}`,
   };
 
   return (
-    <div className="space-y-2 sm:space-y-3 -mx-4 sm:mx-0">
-      {/* Game Player Container */}
+    <div className="w-full flex flex-col items-center space-y-3">
+      
+      {/* 1. Game Canvas Container */}
       <div
         ref={containerRef}
         onClick={handleFocus}
         onMouseEnter={handleFocus}
+        onDoubleClick={toggleFullscreen}
         style={aspectRatioStyle}
-        className="relative w-full overflow-hidden border-y sm:border sm:rounded-xl border-slate-800 bg-black shadow-2xl group cursor-pointer touch-none [&:fullscreen]:aspect-auto [&:fullscreen]:w-screen [&:fullscreen]:h-screen [&:fullscreen]:rounded-none [&:fullscreen]:border-0"
+        className="relative w-full max-h-[66vh] overflow-hidden rounded-xl sm:rounded-2xl border border-slate-800/90 bg-black shadow-2xl group cursor-pointer touch-none [&:fullscreen]:aspect-auto [&:fullscreen]:w-screen [&:fullscreen]:h-screen [&:fullscreen]:rounded-none [&:fullscreen]:border-0 [&:fullscreen]:max-h-none"
       >
-        {/* Mobile Orientation Warning Overlay */}
+        {/* Mobile Orientation Warning */}
         {isPortraitMobile && (
           <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-slate-950/95 p-6 text-center backdrop-blur-md space-y-4">
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 animate-pulse">
-              <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
+              📱
             </div>
             <div className="space-y-1 max-w-xs">
-              <h4 className="text-base font-bold text-white tracking-tight">Rotate Your Phone</h4>
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <h4 className="text-base font-bold text-white tracking-tight font-sans">Rotate Your Phone</h4>
+              <p className="text-xs text-slate-400 leading-relaxed font-mono">
                 This game is designed for landscape mode. Rotate for full-screen arcade action.
               </p>
             </div>
             <button
-              onPointerDown={(e) => {
-                e.preventDefault();
-                setIsPortraitMobile(false);
-              }}
-              className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-300 active:scale-95 transition-transform"
+              onClick={() => setIsPortraitMobile(false)}
+              className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-bold text-slate-300 active:scale-95 transition-transform font-mono"
             >
               Play in Portrait Anyway
             </button>
@@ -201,71 +220,99 @@ export function GamePlayer({ game }: GamePlayerProps) {
 
         <iframe
           ref={iframeRef}
-          src={game.entryUrl}
+          src={`${game.entryUrl}?v=20260901_5`}
           title={game.title}
-          className="h-full w-full border-0"
+          onLoad={sendBestScoreToIframe}
+          className="h-full w-full border-0 block"
           sandbox="allow-scripts allow-same-origin allow-pointer-lock"
           allow="fullscreen; gamepad; autoplay"
           loading="eager"
         />
       </div>
 
-      {/* Action Bar */}
-      <div className="mx-4 sm:mx-0 flex items-center justify-between rounded-lg border border-slate-800/80 bg-slate-900/70 px-3.5 py-2 sm:px-4 sm:py-2.5 backdrop-blur-sm">
+      {/* 2. Unified Premium Controls & Social Action Bar */}
+      <div className="w-full flex flex-wrap items-center justify-between gap-2.5 px-1 font-sans text-xs">
         
-        {/* Status & Live Score / Best Score Display */}
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-400">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Sandbox Active</span>
-          </div>
-
-          <div className="flex items-center gap-2 font-mono text-xs">
-            <div className="flex items-center gap-1.5 rounded bg-slate-800/90 px-2.5 py-1 border border-slate-700">
-              <span className="text-slate-400 font-sans text-[11px] font-semibold uppercase tracking-wider">Score:</span>
-              <span className="font-bold text-white">{liveScore}</span>
-            </div>
-
-            <div className="flex items-center gap-1.5 rounded bg-cyan-950/50 px-2.5 py-1 border border-cyan-500/30 text-cyan-400">
-              <span className="text-cyan-400/80 font-sans text-[11px] font-semibold uppercase tracking-wider">Best:</span>
-              <span className="font-bold text-cyan-300">{bestScore}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Controls */}
-        <div className="flex items-center gap-2">
-          {/* Instant Restart Button */}
+        {/* Left: Tactical Gaming Controls */}
+        <div className="flex items-center gap-2 font-mono">
+          {/* Restart */}
           <button
             type="button"
-            onPointerDown={handleRestart}
-            title="Restart Game"
-            className="flex items-center justify-center h-8 w-8 sm:h-auto sm:w-auto sm:px-3 sm:py-1.5 rounded-md border border-slate-700 bg-slate-800 text-xs font-semibold text-slate-300 hover:bg-slate-700 hover:text-white transition-all active:scale-90 cursor-pointer select-none"
+            onClick={handleRestart}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-slate-800 bg-[#0B1120] hover:border-slate-700 hover:text-white text-slate-300 font-bold transition-all active:scale-95 cursor-pointer shadow-md"
           >
-            <svg className="h-4 w-4 sm:mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            <span className="hidden sm:inline">Restart</span>
+            <span>🔄</span>
+            <span>Restart</span>
           </button>
 
-          {/* Instant PointerDown Fullscreen Button */}
+          {/* Sound */}
           <button
             type="button"
-            onPointerDown={toggleFullscreen}
-            className="flex items-center gap-1.5 rounded-md border border-cyan-500/30 bg-cyan-500/10 px-3.5 py-1.5 text-xs font-semibold text-cyan-400 hover:bg-cyan-500 hover:text-black transition-all active:scale-90 cursor-pointer select-none"
+            onClick={toggleSound}
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border font-bold transition-all active:scale-95 cursor-pointer shadow-md ${
+              isSoundOn
+                ? 'bg-cyan-950/40 border-cyan-500/40 text-cyan-300'
+                : 'bg-[#0B1120] border-slate-800 text-slate-400'
+            }`}
           >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              {isFullscreen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-              )}
-            </svg>
+            <span>{isSoundOn ? '🔊' : '🔇'}</span>
+            <span>{isSoundOn ? 'Sound On' : 'Muted'}</span>
+          </button>
+
+          {/* Fullscreen */}
+          <button
+            type="button"
+            onClick={toggleFullscreen}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-slate-800 bg-[#0B1120] hover:border-cyan-500/40 text-slate-300 hover:text-cyan-300 font-bold transition-all active:scale-95 cursor-pointer shadow-md"
+          >
+            <span>{isFullscreen ? '✕' : '⛶'}</span>
             <span>{isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}</span>
           </button>
         </div>
 
+        {/* Right: Social & Bookmark Actions (100% Synchronized) */}
+        <div className="flex items-center gap-2">
+          {/* Add to My List / In My List */}
+          <button
+            type="button"
+            onClick={handleBookmarkToggle}
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-95 shadow-md ${
+              bookmarked
+                ? 'bg-purple-600 hover:bg-purple-500 text-white border border-purple-400/50 shadow-purple-950/40'
+                : 'bg-[#181F34] hover:bg-[#222B48] border border-slate-700 text-slate-300 hover:text-white'
+            }`}
+          >
+            <svg
+              className={`h-3.5 w-3.5 transition-colors ${
+                bookmarked ? 'stroke-white fill-white' : 'stroke-slate-300 fill-none'
+              }`}
+              viewBox="0 0 24 24"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+            </svg>
+            <span>{bookmarked ? 'In My List' : 'Add to My List'}</span>
+          </button>
+
+          {/* Like / Liked */}
+          <button
+            type="button"
+            onClick={handleLikeToggle}
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-95 shadow-md ${
+              liked
+                ? 'bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-400/50 shadow-emerald-950/40'
+                : 'bg-[#181F34] hover:bg-[#222B48] border border-slate-700 text-slate-300 hover:text-white'
+            }`}
+          >
+            <span className="text-xs leading-none">👍</span>
+            <span>{liked ? 'Liked' : 'Like'}</span>
+          </button>
+        </div>
+
       </div>
+
     </div>
   );
 }

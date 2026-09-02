@@ -1,0 +1,25 @@
+{
+  "name": "ArcadeHub — The Digital Arcade Grid",
+  "short_name": "ArcadeHub",
+  "description": "Play high-performance HTML5 browser games with zero downloads, instant guest persistence, and anti-cheat leaderboards.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050811",
+  "theme_color": "#050811",
+  "orientation": "any",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    {
+      "src": "/thumbnails/space-gem-collector.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/thumbnails/space-gem-collector.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

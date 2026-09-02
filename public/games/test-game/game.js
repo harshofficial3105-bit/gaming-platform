@@ -1,44 +1,81 @@
-﻿const canvas = document.getElementById('gameCanvas');
+const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
+// --- STABLE PER-GAME KEY ---
+const GAME_ID = 'space-gem-collector';
+const BEST_SCORE_KEY = `arcadehub_game_${GAME_ID}_best_score`;
+
 // --- GAME STATE ---
-let score = 0;
-let highScore = 0;
-let isLoaded = false;
-let gameOver = false;
+let score = 0; // Current session score (resets to 0 on launch & restart)
+let bestScore = 0; // Persistent all-time high score
+
+// 1. Synchronous attempt to read from local storage (if permitted in context)
+try {
+  const directScore = window.localStorage.getItem(BEST_SCORE_KEY);
+  if (directScore && !isNaN(Number(directScore))) {
+    bestScore = Number(directScore);
+  }
+} catch (e) {}
+
 let touchActive = false;
 let touchPos = { x: 0, y: 0 };
 
-// 1. Receive restored progress from Portal
-window.addEventListener('message', (e) => {
-  const envelope = e.data;
-  const data = envelope?.data || envelope;
-  if (data?.type === 'LOAD_PROGRESS_RESPONSE' && data.payload) {
-    isLoaded = true;
-    if (typeof data.payload.highScore === 'number') {
-      highScore = Math.max(highScore, data.payload.highScore);
+// 2. Continuous Listener: Synchronize best score from parent window
+window.addEventListener('message', (event) => {
+  if (!event.data || typeof event.data !== 'object') return;
+
+  const msg = event.data;
+  if (
+    msg.type === 'ARCADEHUB_LOAD_BEST_SCORE' ||
+    msg.type === 'LOAD_PROGRESS_RESPONSE' || 
+    msg.type === 'LOAD_STATE_RESPONSE'
+  ) {
+    const incoming = 
+      typeof msg.score === 'number'
+        ? msg.score
+        : typeof msg.highScore === 'number'
+          ? msg.highScore
+          : typeof msg.payload?.highScore === 'number'
+            ? msg.payload.highScore
+            : typeof msg.data?.highScore === 'number'
+              ? msg.data.highScore
+              : 0;
+
+    if (incoming > bestScore) {
+      bestScore = incoming;
+      try {
+        window.localStorage.setItem(BEST_SCORE_KEY, String(bestScore));
+      } catch (err) {}
     }
   }
 });
 
-// 2. Announce SDK readiness to Portal and request saved state
-function sendHandshake() {
+// 3. Announce readiness & query parent storage
+function syncWithParent() {
   if (window.parent && window.parent !== window) {
-    window.parent.postMessage({ type: 'SDK_READY', version: '1.0' }, '*');
-    window.parent.postMessage({ type: 'REQUEST_LOAD_PROGRESS' }, '*');
+    window.parent.postMessage(
+      {
+        type: 'SDK_READY',
+        gameId: GAME_ID,
+        version: '1.0',
+      },
+      '*'
+    );
+    window.parent.postMessage(
+      {
+        type: 'REQUEST_LOAD_PROGRESS',
+        gameId: GAME_ID,
+      },
+      '*'
+    );
   }
 }
-sendHandshake();
-// Retry handshake until acknowledged
-const handshakeInterval = setInterval(() => {
-  if (isLoaded) {
-    clearInterval(handshakeInterval);
-  } else {
-    sendHandshake();
-  }
-}, 200);
+syncWithParent();
 
-// Player Object
+// Keep polling parent bridge at intervals until score is received
+const syncInterval = setInterval(syncWithParent, 150);
+
+// Player Ship Object
 const player = {
   x: canvas.width / 2,
   y: canvas.height / 2,
@@ -49,8 +86,8 @@ const player = {
 
 // Collectible Gem Object
 const gem = {
-  x: Math.random() * (canvas.width - 40) + 20,
-  y: Math.random() * (canvas.height - 40) + 20,
+  x: Math.random() * (canvas.width - 60) + 30,
+  y: Math.random() * (canvas.height - 60) + 30,
   size: 12,
   color: '#f59e0b'
 };
@@ -94,7 +131,7 @@ function handlePointer(clientX, clientY) {
 // Mouse Listeners
 canvas.addEventListener('mousemove', (e) => handlePointer(e.clientX, e.clientY));
 
-// Touch Listeners (for Mobile / Tablets)
+// Touch Listeners (Mobile / Tablets)
 canvas.addEventListener('touchstart', (e) => {
   touchActive = true;
   if (e.touches.length > 0) {
@@ -113,7 +150,7 @@ canvas.addEventListener('touchend', () => {
   touchActive = false;
 });
 
-// --- UPDATE LOGIC ---
+// --- GAMEPLAY UPDATE LOOP ---
 function update() {
   if (keys['ArrowUp'] || keys['w'] || keys['W']) player.y -= player.speed;
   if (keys['ArrowDown'] || keys['s'] || keys['S']) player.y += player.speed;
@@ -131,30 +168,48 @@ function update() {
   if (distance < player.size + gem.size) {
     score += 10;
     
-    // Only update high score if current score exceeds previous all-time best
-    if (score > highScore) {
-      highScore = score;
+    // Update Best Score IMMEDIATELY when current score breaks the record
+    if (score > bestScore) {
+      bestScore = score;
+      
+      try {
+        window.localStorage.setItem(BEST_SCORE_KEY, String(bestScore));
+      } catch (err) {}
+
+      // Broadcast immediately to parent window
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage(
+          {
+            type: 'ARCADEHUB_BEST_SCORE',
+            gameId: GAME_ID,
+            score: bestScore,
+          },
+          '*'
+        );
+      }
     }
 
-    gem.x = Math.random() * (canvas.width - 40) + 20;
-    gem.y = Math.random() * (canvas.height - 40) + 20;
+    gem.x = Math.random() * (canvas.width - 60) + 30;
+    gem.y = Math.random() * (canvas.height - 60) + 30;
 
-    // Send score and save high score to Guest Vault
+    // Send score update to parent bridge
     if (window.parent && window.parent !== window) {
       window.parent.postMessage(
         {
           type: 'SCORE_UPDATE',
+          gameId: GAME_ID,
+          score: score,
           payload: { score: score },
           timestamp: Date.now()
         },
         '*'
       );
-
-      // Auto-save high score to local vault
       window.parent.postMessage(
         {
           type: 'SAVE_PROGRESS',
-          payload: { data: { highScore: highScore } },
+          gameId: GAME_ID,
+          data: { highScore: bestScore },
+          payload: { highScore: bestScore },
           timestamp: Date.now()
         },
         '*'
@@ -163,11 +218,11 @@ function update() {
   }
 }
 
-// --- RENDER LOGIC ---
+// --- RENDER HUD ---
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // 1. Draw Touch Ring on Mobile
+  // 1. Touch Ring on Mobile
   if (touchActive) {
     ctx.save();
     ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
@@ -178,7 +233,7 @@ function draw() {
     ctx.restore();
   }
 
-  // 2. Draw Collectible Gem (with glow)
+  // 2. Gem with Amber Glow
   ctx.save();
   ctx.shadowColor = '#fbbf24';
   ctx.shadowBlur = 15;
@@ -188,7 +243,7 @@ function draw() {
   ctx.fill();
   ctx.restore();
 
-  // 3. Draw Player Ship
+  // 3. Player Ship
   ctx.save();
   ctx.fillStyle = player.color;
   ctx.beginPath();
@@ -196,14 +251,28 @@ function draw() {
   ctx.fill();
   ctx.restore();
 
-  // 4. Draw Score HUD (Live Score + Persistent Best Score)
+  // 4. Horizontal Score & Best Score HUD
+  ctx.save();
+  ctx.font = 'bold 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  
+  // Current Session Score
+  const scoreText = `SCORE: ${score}`;
   ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, sans-serif';
-  ctx.fillText(`SCORE: ${score}`, 24, 36);
+  ctx.fillText(scoreText, 24, 34);
+  
+  const scoreMetrics = ctx.measureText(scoreText);
+  const separatorX = 24 + scoreMetrics.width + 12;
 
+  // Divider
+  ctx.fillStyle = '#475569';
+  ctx.fillText('•', separatorX, 33);
+
+  // Persistent Best Score
+  const bestX = separatorX + 16;
   ctx.fillStyle = '#38bdf8';
-  ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, sans-serif';
-  ctx.fillText(`BEST: ${highScore}`, 24, 62);
+  ctx.fillText(`BEST: ${bestScore}`, bestX, 34);
+
+  ctx.restore();
 }
 
 function gameLoop() {

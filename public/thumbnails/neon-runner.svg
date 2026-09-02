@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="neonSky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7"/>
+      <stop offset="60%" stop-color="#4f46e5"/>
+      <stop offset="100%" stop-color="#050811"/>
+    </linearGradient>
+    <filter id="cyanGlow"><feGaussianBlur stdDeviation="6" result="blur"/><feComposite in="SourceGraphic" in2="blur" operator="over"/></filter>
+  </defs>
+  <rect width="800" height="500" fill="url(#neonSky)"/>
+  <!-- Cyberpunk Skyscrapers -->
+  <rect x="100" y="180" width="90" height="250" fill="#0b1120" stroke="#00f0ff" stroke-width="1.5"/>
+  <rect x="220" y="120" width="110" height="310" fill="#070b14" stroke="#8b5cf6" stroke-width="1.5"/>
+  <rect x="360" y="200" width="130" height="230" fill="#0b1120" stroke="#00f0ff" stroke-width="1.5"/>
+  <rect x="520" y="150" width="100" height="280" fill="#070b14" stroke="#ec4899" stroke-width="1.5"/>
+  <rect x="650" y="220" width="90" height="210" fill="#0b1120" stroke="#00f0ff" stroke-width="1.5"/>
+  <!-- Neon Rooftop Runner -->
+  <circle cx="430" cy="150" r="14" fill="#00f0ff" filter="url(#cyanGlow)"/>
+  <path d="M430 164 L440 185 L465 190 M430 185 L415 200 L435 220" stroke="#00f0ff" stroke-width="5" stroke-linecap="round" fill="none" filter="url(#cyanGlow)"/>
+  <!-- Title Badge -->
+  <rect x="260" y="425" width="280" height="45" rx="10" fill="#0b1120" stroke="#00f0ff" stroke-width="1.5"/>
+  <text x="400" y="454" font-family="monospace" font-size="18" font-weight="900" fill="#00f0ff" text-anchor="middle" letter-spacing="3">NEON RUNNER</text>
+</svg>

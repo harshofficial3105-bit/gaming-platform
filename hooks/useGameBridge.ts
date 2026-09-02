@@ -1,107 +1,202 @@
-﻿'use client';
-
 import { useEffect, useCallback } from 'react';
-import { GameToPortalMessage, SDKEnvelope } from '@/types/sdk';
 import { guestVault } from '@/lib/storage/guestVault';
 
-interface UseGameBridgeOptions {
-  gameId: string;
-  expectedOrigin?: string;
-  onScoreUpdate?: (score: number) => void;
-  onSaveState?: (state: Record<string, unknown>) => void;
-  onGameOver?: (finalScore: number) => void;
+export interface GameBridgeMessage {
+  type: string;
+  gameId?: string;
+  score?: number;
+  data?: Record<string, unknown>;
+  payload?: {
+    score?: number;
+    data?: Record<string, unknown>;
+    highScore?: number;
+    [key: string]: unknown;
+  };
+  version?: string | number;
 }
 
-export function useGameBridge(options: UseGameBridgeOptions) {
-  const { gameId, onScoreUpdate, onSaveState, onGameOver } = options;
+interface UseGameBridgeProps {
+  gameId: string;
+  onScoreUpdate?: (score: number) => void;
+  onGameOver?: (finalScore: number) => void;
+  onSaveState?: (state: Record<string, unknown>) => void;
+}
 
-  const allowedOrigin =
-    options.expectedOrigin ||
-    (typeof window !== 'undefined' ? window.location.origin : '');
+export function useGameBridge({
+  gameId,
+  onScoreUpdate,
+  onGameOver,
+  onSaveState,
+}: UseGameBridgeProps) {
+  
+  // Increment play count & dispatch telemetry on game load
+  useEffect(() => {
+    try {
+      // 1. Dynamic local play counter increment
+      const playKey = `arcadehub_game_${gameId}_plays`;
+      const currentPlays = Number(localStorage.getItem(playKey) || 0);
+      const newPlays = currentPlays + 1;
+      localStorage.setItem(playKey, String(newPlays));
+      window.dispatchEvent(new Event('arcadehub_play_count_updated'));
+
+      // 2. Telemetry event dispatch
+      fetch('/api/telemetry/event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          gameId,
+          eventType: 'game.start',
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+    } catch {}
+  }, [gameId]);
 
   const handleMessage = useCallback(
-    (event: MessageEvent<SDKEnvelope<GameToPortalMessage> | any>) => {
-      if (allowedOrigin && event.origin !== allowedOrigin) {
+    (event: MessageEvent) => {
+      if (!event.data || typeof event.data !== 'object') {
         return;
       }
 
-      const raw = event.data;
-      if (!raw || typeof raw !== 'object') {
-        return;
-      }
+      const message = event.data as GameBridgeMessage;
+      const msgType = message.type;
+      const targetGameId = message.gameId || gameId;
 
-      const message: any =
-        'protocol' in raw && raw.protocol === 'PORTAL_SDK' && 'data' in raw
-          ? raw.data
-          : raw;
+      // Extract raw score
+      const rawScore = typeof message.score === 'number' 
+        ? message.score 
+        : typeof message.payload?.score === 'number' 
+          ? message.payload.score 
+          : typeof message.payload?.highScore === 'number'
+            ? message.payload.highScore
+            : undefined;
 
-      if (!message || !message.type) {
-        return;
-      }
+      // Extract saved state data
+      const rawData = (message.data && typeof message.data === 'object' ? message.data : undefined) ||
+                      (message.payload?.data && typeof message.payload.data === 'object' ? message.payload.data : undefined) ||
+                      (message.payload && typeof message.payload === 'object' ? message.payload : undefined);
 
-      switch (message.type) {
-        case 'SCORE_UPDATE': {
-          const score =
-            typeof message.score === 'number'
-              ? message.score
-              : message.payload?.score;
-          if (typeof score === 'number') {
-            onScoreUpdate?.(score);
+      switch (msgType) {
+        // Direct Best Score event from game
+        case 'ARCADEHUB_BEST_SCORE': {
+          if (typeof rawScore === 'number' && Number.isFinite(rawScore)) {
+            const key = `arcadehub_game_${targetGameId}_best_score`;
+            const existing = Number(localStorage.getItem(key) || 0);
+            const newBest = Math.max(existing, rawScore);
+
+            localStorage.setItem(key, String(newBest));
+            guestVault.saveProgress(targetGameId, { highScore: newBest, lastScore: rawScore });
           }
           break;
         }
 
-        case 'SAVE_PROGRESS':
-        case 'SAVE_STATE': {
-          const incoming = message.payload?.data || message.payload || message.data;
-          if (incoming && typeof incoming === 'object') {
-            const existing = guestVault.loadProgress(gameId) || {};
-            
-            // Monotonically preserve the true all-time highest score
-            const existingHigh = typeof existing.highScore === 'number' ? existing.highScore : 0;
-            const incomingHigh = typeof incoming.highScore === 'number' ? incoming.highScore : 0;
-            const trueHighScore = Math.max(existingHigh, incomingHigh);
-
-            const mergedData = {
-              ...existing,
-              ...incoming,
-              highScore: trueHighScore,
-            };
-
-            guestVault.saveProgress(gameId, mergedData);
-            onSaveState?.(mergedData);
-          }
-          break;
-        }
-
+        // Handshake & Initial Loading Request from Game
         case 'SDK_READY':
-        case 'REQUEST_LOAD_PROGRESS': {
-          // Send all-time saved progress to the game iframe
-          const savedData = guestVault.loadProgress(gameId) || { highScore: 0 };
-          if (event.source && 'postMessage' in event.source) {
-            (event.source as Window).postMessage(
+        case 'REQUEST_LOAD_PROGRESS':
+        case 'LOAD_STATE_REQUEST': {
+          const key = `arcadehub_game_${targetGameId}_best_score`;
+          const savedKeyScore = Number(localStorage.getItem(key) || 0);
+          const savedVaultData = guestVault.loadProgress(targetGameId) || {};
+          const vaultScore = typeof savedVaultData.highScore === 'number' ? savedVaultData.highScore : 0;
+          const effectiveBest = Math.max(savedKeyScore, vaultScore);
+
+          if (event.source) {
+            (event.source as WindowProxy).postMessage(
               {
-                protocol: 'PORTAL_SDK',
-                version: 'v1',
-                timestamp: Date.now(),
-                data: {
-                  type: 'LOAD_PROGRESS_RESPONSE',
-                  payload: savedData,
-                },
+                type: 'ARCADEHUB_LOAD_BEST_SCORE',
+                gameId: targetGameId,
+                score: effectiveBest,
+                highScore: effectiveBest,
               },
-              event.origin || '*'
+              '*'
+            );
+            (event.source as WindowProxy).postMessage(
+              {
+                type: 'LOAD_PROGRESS_RESPONSE',
+                payload: { ...savedVaultData, highScore: effectiveBest },
+                data: { ...savedVaultData, highScore: effectiveBest },
+              },
+              '*'
+            );
+            (event.source as WindowProxy).postMessage(
+              {
+                type: 'LOAD_STATE_RESPONSE',
+                payload: { ...savedVaultData, highScore: effectiveBest },
+                data: { ...savedVaultData, highScore: effectiveBest },
+              },
+              '*'
             );
           }
           break;
         }
 
+        // Live score updates
+        case 'SCORE_UPDATE': {
+          if (typeof rawScore === 'number' && Number.isFinite(rawScore)) {
+            const key = `arcadehub_game_${targetGameId}_best_score`;
+            const existing = Number(localStorage.getItem(key) || 0);
+            const currentSave = (guestVault.loadProgress(targetGameId) || {}) as Record<string, unknown>;
+            const currentHighScore = typeof currentSave.highScore === 'number' ? currentSave.highScore : 0;
+            const newHighScore = Math.max(existing, currentHighScore, rawScore);
+
+            localStorage.setItem(key, String(newHighScore));
+            guestVault.saveProgress(targetGameId, {
+              ...currentSave,
+              highScore: newHighScore,
+              lastScore: rawScore,
+            });
+
+            onScoreUpdate?.(rawScore);
+          }
+          break;
+        }
+
+        // Game Over
         case 'GAME_OVER': {
-          const score =
-            typeof message.score === 'number'
-              ? message.score
-              : message.payload?.score;
-          if (typeof score === 'number') {
-            onGameOver?.(score);
+          if (typeof rawScore === 'number' && Number.isFinite(rawScore)) {
+            const key = `arcadehub_game_${targetGameId}_best_score`;
+            const existing = Number(localStorage.getItem(key) || 0);
+            const currentSave = (guestVault.loadProgress(targetGameId) || {}) as Record<string, unknown>;
+            const currentHighScore = typeof currentSave.highScore === 'number' ? currentSave.highScore : 0;
+            const newHighScore = Math.max(existing, currentHighScore, rawScore);
+
+            localStorage.setItem(key, String(newHighScore));
+            guestVault.saveProgress(targetGameId, {
+              ...currentSave,
+              highScore: newHighScore,
+              lastScore: rawScore,
+            });
+
+            onGameOver?.(rawScore);
+          }
+          break;
+        }
+
+        // State persistence
+        case 'SAVE_PROGRESS':
+        case 'SAVE_STATE': {
+          if (rawData && typeof rawData === 'object') {
+            const currentSave = (guestVault.loadProgress(targetGameId) || {}) as Record<string, unknown>;
+            const currentHighScore = typeof currentSave.highScore === 'number' ? currentSave.highScore : 0;
+            const incomingHighScore = typeof (rawData as any).highScore === 'number' 
+              ? (rawData as any).highScore 
+              : typeof rawScore === 'number' 
+                ? rawScore 
+                : 0;
+
+            const key = `arcadehub_game_${targetGameId}_best_score`;
+            const existing = Number(localStorage.getItem(key) || 0);
+            const mergedHighScore = Math.max(existing, currentHighScore, incomingHighScore);
+
+            localStorage.setItem(key, String(mergedHighScore));
+            const updatedData = {
+              ...currentSave,
+              ...rawData,
+              highScore: mergedHighScore,
+            };
+
+            guestVault.saveProgress(targetGameId, updatedData);
+            onSaveState?.(updatedData);
           }
           break;
         }
@@ -110,7 +205,7 @@ export function useGameBridge(options: UseGameBridgeOptions) {
           break;
       }
     },
-    [allowedOrigin, gameId, onScoreUpdate, onSaveState, onGameOver]
+    [gameId, onScoreUpdate, onGameOver, onSaveState]
   );
 
   useEffect(() => {

@@ -1,16 +1,12 @@
-import type { NextConfig } from 'next';
+﻿import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  // 1. Enable React Strict Mode & Production Compressions
-  reactStrictMode: true,
-  compress: true, // Enables automatic Gzip & Brotli compression for all text assets
-
-  // 2. Production HTTP Response Headers
+  // Production HTTP Header Rules
   async headers() {
     return [
+      // 1. Static Game Bundles & Assets (Aggressive Zero-Latency Edge Cache)
       {
-        // Apply to all static assets (Images, Fonts, Scripts in /public and _next/static)
-        source: '/:all*(svg|jpg|png|webp|woff2|css|js)',
+        source: '/games/:path*',
         headers: [
           {
             key: 'Cache-Control',
@@ -18,9 +14,21 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+
+      // 2. Dynamic APIs (Real-time, zero-cache for live leaderboard & cloud saves)
       {
-        // Global Security Headers for all routes
-        source: '/:path*',
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+          },
+        ],
+      },
+
+      // 3. Global Security Headers for all platform pages
+      {
+        source: '/(.*)',
         headers: [
           {
             key: 'X-Content-Type-Options',
@@ -33,6 +41,10 @@ const nextConfig: NextConfig = {
           {
             key: 'Referrer-Policy',
             value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
           },
         ],
       },

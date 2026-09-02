@@ -1,29 +1,47 @@
 import { S3Client } from '@aws-sdk/client-s3';
 
-// 1. Initialize S3-compatible client for Cloudflare R2
-const accountId = process.env.R2_ACCOUNT_ID || 'placeholder-account-id';
+// Initialize S3-compatible client for Cloudflare R2 (Server-Side Only)
+const accountId = process.env.R2_ACCOUNT_ID || '';
 
 export const r2Client = new S3Client({
   region: 'auto',
-  endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+  endpoint: accountId ? `https://${accountId}.r2.cloudflarestorage.com` : undefined,
   credentials: {
-    accessKeyId: process.env.R2_ACCESS_KEY_ID || 'placeholder-access-key',
-    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || 'placeholder-secret-key',
+    accessKeyId: process.env.R2_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
   },
 });
 
 export const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME || 'arcadehub-games';
 
-// 2. Helper to resolve the public CDN URL for a versioned game asset
-export function getGameAssetUrl(gameSlug: string, version: string = 'v1', filePath: string = 'index.html'): string {
-  // If in local development and no custom CDN origin is set, fallback to local static games
-  const gamesOrigin = process.env.NEXT_PUBLIC_GAMES_URL || 'http://localhost:3000';
+/**
+ * Generate an immutable, creator-isolated object storage path
+ * Prevents any creator from overwriting another creator's game assets
+ */
+export function getCreatorGameStoragePath(
+  creatorId: string,
+  gameSlug: string,
+  version: string = 'v1',
+  fileName: string = 'index.html'
+): string {
+  // Clean paths to prevent directory traversal
+  const cleanCreator = creatorId.replace(/[^a-zA-Z0-9_-]/g, '');
+  const cleanSlug = gameSlug.replace(/[^a-zA-Z0-9_-]/g, '');
+  const cleanVersion = version.replace(/[^a-zA-Z0-9_.-]/g, '');
+  const cleanFile = fileName.replace(/^\/+/, '');
 
-  // In production: https://games.mygameportal.com/space-gem-collector/v1/index.html
-  // In development: http://localhost:3000/games/test-game/index.html
-  if (process.env.NODE_ENV === 'development' && gamesOrigin.includes('localhost')) {
-    return `/games/test-game/${filePath}`;
+  return `creators/${cleanCreator}/games/${cleanSlug}/${cleanVersion}/${cleanFile}`;
+}
+
+/**
+ * Resolve public CDN asset URL for a published game
+ */
+export function getGameAssetUrl(gameSlug: string, version: string = 'v1', filePath: string = 'index.html'): string {
+  const gamesOrigin = process.env.NEXT_PUBLIC_R2_PUBLIC_URL || process.env.NEXT_PUBLIC_APP_URL || '';
+  
+  if (!gamesOrigin || gamesOrigin.includes('localhost')) {
+    return `/games/${gameSlug}/${filePath}`;
   }
 
-  return `${gamesOrigin}/${gameSlug}/${version}/${filePath}`;
+  return `${gamesOrigin}/games/${gameSlug}/${version}/${filePath}`;
 }

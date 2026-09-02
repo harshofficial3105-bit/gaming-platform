@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Neon Grid Breaker</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="game-container">
+    <canvas id="gameCanvas" width="800" height="500"></canvas>
+    <div id="ui-layer">
+      <div id="score-board">
+        <div>SCORE: <span id="score">0</span></div>
+        <div>BEST: <span id="high-score">0</span></div>
+        <div>LIVES: <span id="lives">❤❤❤</span></div>
+      </div>
+      <div id="game-over-screen" class="hidden">
+        <h1 id="over-title">GRID DECONSTRUCTED</h1>
+        <p>FINAL SCORE: <span id="final-score">0</span> PTS</p>
+        <button id="restart-btn">REBUILD GRID (SPACE / TAP)</button>
+      </div>
+    </div>
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>

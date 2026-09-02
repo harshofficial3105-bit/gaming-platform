@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Void Runner</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="game-container">
+    <canvas id="gameCanvas" width="800" height="500"></canvas>
+    <div id="ui-layer">
+      <div id="score-board">
+        <div>DISTANCE: <span id="score">0</span> M</div>
+        <div>BEST: <span id="high-score">0</span> M</div>
+        <div>GRAVITY: <span id="grav-state">NORMAL</span></div>
+      </div>
+      <div id="game-over-screen" class="hidden">
+        <h1>FELL INTO THE VOID</h1>
+        <p>MAX RUN: <span id="final-score">0</span> METERS</p>
+        <button id="restart-btn">RE-ENTER THE VOID (SPACE / TAP)</button>
+      </div>
+    </div>
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>
