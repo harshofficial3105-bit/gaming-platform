@@ -10,6 +10,7 @@ import { GlobalFeedbackModal } from '@/components/feedback/GlobalFeedbackModal';
 import { KeyboardShortcutsModal } from '@/components/ui/KeyboardShortcutsModal';
 import { PwaInstallPrompt } from '@/components/ui/PwaInstallPrompt';
 import { Footer } from '@/components/layout/Footer';
+import { ThemeProvider } from '@/components/theme/ThemeProvider';
 
 const outfit = Outfit({
   subsets: ['latin'],
@@ -55,27 +56,32 @@ export default function RootLayout({
       className={`dark ${outfit.variable} ${plusJakartaSans.variable} ${jetbrainsMono.variable}`}
       suppressHydrationWarning
     >
+      <head>
+        <meta charSet="UTF-8" />
+      </head>
       <body
         suppressHydrationWarning
-        className="min-h-screen bg-quantum-grid text-slate-100 flex flex-col antialiased selection:bg-cyan-400 selection:text-black font-sans pb-16 md:pb-0"
+        className="min-h-screen bg-quantum-grid text-slate-100 dark:text-slate-100 light:text-slate-900 flex flex-col antialiased selection:bg-cyan-400 selection:text-black font-sans pb-16 md:pb-0 transition-colors duration-200"
       >
-        <Navbar />
-        {/* Main Stage */}
-        <main className="flex-1 w-full max-w-[1750px] mx-auto px-2 sm:px-4 py-4">
-          {children}
-        </main>
-        
-        {/* Global Player Platform Footer */}
-        <Footer />
-        
-        {/* Global Floating Actions & Overlays */}
-        <MobileBottomDock />
-        <CommandPaletteModal />
-        <AuthModal />
-        <NetworkStatusBanner />
-        <GlobalFeedbackModal />
-        <KeyboardShortcutsModal />
-        <PwaInstallPrompt />
+        <ThemeProvider>
+          <Navbar />
+          {/* Main Stage */}
+          <main className="flex-1 w-full max-w-[1750px] mx-auto px-2 sm:px-4 py-4">
+            {children}
+          </main>
+          
+          {/* Global Player Platform Footer */}
+          <Footer />
+          
+          {/* Global Floating Actions & Overlays */}
+          <MobileBottomDock />
+          <CommandPaletteModal />
+          <AuthModal />
+          <NetworkStatusBanner />
+          <GlobalFeedbackModal />
+          <KeyboardShortcutsModal />
+          <PwaInstallPrompt />
+        </ThemeProvider>
       </body>
     </html>
   );

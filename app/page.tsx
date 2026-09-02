@@ -1,146 +1,135 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { getAllGames } from '@/lib/games';
-import { GameCategory } from '@/types/game';
-import { GamePortal } from '@/components/ui/GamePortal';
+import React, { useState, useMemo } from 'react';
 import { HeroConduit } from '@/components/home/HeroConduit';
+import { HeroCarousel } from '@/components/home/HeroCarousel';
 import { PlayModeSelector, ActivePlayMode } from '@/components/home/PlayModeSelector';
 import { ContinuePlayingShelf } from '@/components/vault/ContinuePlayingShelf';
-import { getFavorites } from '@/lib/storage/favorites';
+import { GamePortal } from '@/components/ui/GamePortal';
 import { Leaderboard } from '@/components/game/Leaderboard';
+import { getAllGames, ExtendedGame } from '@/lib/games';
+import { useGuestVault } from '@/hooks/useGuestVault';
+import {
+  Flame,
+  Star,
+  Sparkles,
+  Search,
+  X,
+  Heart,
+  Gamepad2,
+  Swords,
+  Puzzle,
+  Car,
+  Trophy,
+  Compass,
+  Layers,
+  ArrowRight,
+} from 'lucide-react';
 
-export type SortOrder = 'popular' | 'rating' | 'newest' | 'alpha';
+type SortOrder = 'popular' | 'rating' | 'newest' | 'alpha';
 
 export default function HomePage() {
-  const allGames = useMemo(() => getAllGames(), []);
   const [activeMode, setActiveMode] = useState<ActivePlayMode>('all');
-  const [selectedCategory, setSelectedCategory] = useState<GameCategory | 'all' | 'favorites'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [sortBy, setSortBy] = useState<SortOrder>('popular');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [favoritesList, setFavoritesList] = useState<string[]>([]);
-  const [visibleBatchCount, setVisibleBatchCount] = useState<number>(24);
+  const [visibleBatchCount, setVisibleBatchCount] = useState<number>(12);
 
-  useEffect(() => {
-    setFavoritesList(getFavorites());
-    const handleFavUpdate = () => setFavoritesList(getFavorites());
-    window.addEventListener('arcadehub_favorites_updated', handleFavUpdate);
-    return () => window.removeEventListener('arcadehub_favorites_updated', handleFavUpdate);
-  }, []);
+  const { bookmarkedIds } = useGuestVault();
+  const favoritesList = bookmarkedIds;
 
-  // Reset pagination batch when category, mode, sort, or search changes
-  useEffect(() => {
-    setVisibleBatchCount(24);
-  }, [selectedCategory, activeMode, sortBy, searchQuery]);
+  const allGames = useMemo(() => getAllGames(), []);
+  const featuredGame = allGames.find((g) => g.isFeatured) || allGames[0];
 
-  const featuredGame = useMemo(() => {
-    return allGames.find((g) => g.id === 'space-gem-collector') || allGames[0];
-  }, [allGames]);
-
+  // Compute game counts by mood
   const gameCounts = useMemo(() => {
     const counts: Record<ActivePlayMode, number> = {
       all: allGames.length,
-      quick: 0,
-      challenging: 0,
-      relaxing: 0,
-      competitive: 0,
+      quick: allGames.filter((g) => g.moods?.includes('quick')).length,
+      challenging: allGames.filter((g) => g.moods?.includes('challenging')).length,
+      relaxing: allGames.filter((g) => g.moods?.includes('relaxing')).length,
+      competitive: allGames.filter((g) => g.moods?.includes('competitive')).length,
     };
-
-    allGames.forEach((g) => {
-      g.moods?.forEach((m) => {
-        if (counts[m] !== undefined) counts[m]++;
-      });
-    });
-
     return counts;
   }, [allGames]);
 
+  // Filter and Sort Engine
   const filteredAndSortedGames = useMemo(() => {
-    const filtered = allGames.filter((game) => {
-      if (selectedCategory === 'favorites') {
-        if (!favoritesList.includes(game.id)) return false;
-      } else if (selectedCategory !== 'all' && game.category !== selectedCategory) {
-        return false;
-      }
+    let result = [...allGames];
 
-      if (activeMode !== 'all') {
-        if (!game.moods || !game.moods.includes(activeMode)) {
-          return false;
-        }
-      }
+    // 1. Play Mode / Mood Filter
+    if (activeMode !== 'all') {
+      result = result.filter((g) => g.moods && g.moods.includes(activeMode as any));
+    }
 
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const matchesTitle = game.title.toLowerCase().includes(q);
-        const matchesCategory = game.category.toLowerCase().includes(q);
-        const matchesTags = game.tags.some((t) => t.toLowerCase().includes(q));
-        if (!matchesTitle && !matchesCategory && !matchesTags) return false;
-      }
+    // 2. Category Filter
+    if (selectedCategory === 'favorites') {
+      result = result.filter((g) => favoritesList.includes(g.id));
+    } else if (selectedCategory !== 'all') {
+      result = result.filter((g) => g.category.toLowerCase() === selectedCategory.toLowerCase());
+    }
 
-      return true;
-    });
+    // 3. Search Query (Title, Description, Category, Tags)
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter(
+        (g) =>
+          g.title.toLowerCase().includes(q) ||
+          g.category.toLowerCase().includes(q) ||
+          g.description.toLowerCase().includes(q) ||
+          (g.tags && g.tags.some((t: string) => t.toLowerCase().includes(q)))
+      );
+    }
 
-    // Apply sorting
-    return filtered.sort((a, b) => {
-      if (sortBy === 'popular') {
-        const playsA = typeof window !== 'undefined' ? Number(localStorage.getItem(`arcadehub_game_${a.id}_plays`) || 0) : 0;
-        const playsB = typeof window !== 'undefined' ? Number(localStorage.getItem(`arcadehub_game_${b.id}_plays`) || 0) : 0;
-        return playsB - playsA;
+    // 4. Sorting
+    result.sort((a, b) => {
+      if (sortBy === 'popular' || sortBy === 'rating') {
+        return (b.rating || 0) - (a.rating || 0);
       }
-      if (sortBy === 'rating') {
-        return (b.rating || 4.8) - (a.rating || 4.8);
-      }
-      if (sortBy === 'newest') {
-        const dateA = new Date(a.publishedAt || 0).getTime();
-        const dateB = new Date(b.publishedAt || 0).getTime();
-        return dateB - dateA;
-      }
+      if (sortBy === 'newest') { return new Date(b.publishedAt || 0).getTime() - new Date(a.publishedAt || 0).getTime(); }
       if (sortBy === 'alpha') {
         return a.title.localeCompare(b.title);
       }
       return 0;
     });
-  }, [allGames, selectedCategory, activeMode, searchQuery, favoritesList, sortBy]);
 
-  const displayedGames = useMemo(() => {
-    return filteredAndSortedGames.slice(0, visibleBatchCount);
-  }, [filteredAndSortedGames, visibleBatchCount]);
+    return result;
+  }, [allGames, activeMode, selectedCategory, searchQuery, sortBy, favoritesList]);
 
-  const hasMoreGames = visibleBatchCount < filteredAndSortedGames.length;
+  const displayedGames = filteredAndSortedGames.slice(0, visibleBatchCount);
+  const hasMoreGames = filteredAndSortedGames.length > visibleBatchCount;
 
   const handleLoadMore = () => {
-    setVisibleBatchCount((prev) => prev + 24);
+    setVisibleBatchCount((prev) => prev + 12);
   };
 
-  const categories: { id: GameCategory | 'all' | 'favorites'; label: string; icon: string }[] = [
-    { id: 'all', label: 'All Portals', icon: 'âš¡' },
-    { id: 'favorites', label: 'Favorite Games', icon: 'â¤ï¸' },
-    { id: 'arcade', label: 'Arcade', icon: 'ðŸ•¹ï¸' },
-    { id: 'action', label: 'Action', icon: 'ðŸš€' },
-    { id: 'puzzle', label: 'Puzzle', icon: 'ðŸ§©' },
-    { id: 'racing', label: 'Racing', icon: 'ðŸŽï¸' },
-    { id: 'sports', label: 'Sports', icon: 'âš½' },
-    { id: 'adventure', label: 'Adventure', icon: 'ðŸ—ºï¸' },
+  const categories = [
+    { id: 'all', label: 'All Portals', icon: Layers },
+    { id: 'favorites', label: 'Favorite Games', icon: Heart },
+    { id: 'arcade', label: 'Arcade', icon: Gamepad2 },
+    { id: 'action', label: 'Action', icon: Swords },
+    { id: 'puzzle', label: 'Puzzle', icon: Puzzle },
+    { id: 'racing', label: 'Racing', icon: Car },
+    { id: 'sports', label: 'Sports', icon: Trophy },
+    { id: 'adventure', label: 'Adventure', icon: Compass },
   ];
 
   return (
-    <div className="space-y-12 sm:space-y-16 pb-12 font-sans">
+    <div className="space-y-10">
       
-      {/* 1. TOP RESPONSIVE SIDE-BY-SIDE HERO & DISCOVERY SECTORS */}
-      {featuredGame && (
-        <section className="grid grid-cols-1 xl:grid-cols-12 gap-6 lg:gap-8 items-stretch">
-          <div className="xl:col-span-7 flex flex-col">
-            <HeroConduit featuredGame={featuredGame} />
-          </div>
-          <div className="xl:col-span-5 flex flex-col justify-between">
-            <PlayModeSelector
-              activeMode={activeMode}
-              onSelectMode={(mode) => setActiveMode(mode)}
-              gameCounts={gameCounts}
-            />
-          </div>
-        </section>
-      )}
+      {/* 1. Hero Command Stage */}
+      <section className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-stretch">
+        <div className="lg:col-span-2">
+          {featuredGame && <HeroConduit featuredGame={featuredGame} />}
+        </div>
+        <div className="flex flex-col justify-between">
+          <PlayModeSelector
+            activeMode={activeMode}
+            onSelectMode={setActiveMode}
+            gameCounts={gameCounts}
+          />
+        </div>
+      </section>
 
       {/* 2. Instant Resume Guest Vault Shelf */}
       <ContinuePlayingShelf />
@@ -149,33 +138,33 @@ export default function HomePage() {
       <section id="explore" className="space-y-6 scroll-mt-24">
         
         {/* Section Header with Dynamic Controls */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 border-b border-slate-800/80 pb-4">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 border-b border-slate-800/80 dark:border-slate-800/80 light:border-slate-200 pb-4">
           <div className="space-y-1">
-            <h2 className="text-xl sm:text-2xl font-black font-display text-white flex items-center gap-2">
+            <h2 className="text-xl sm:text-2xl font-black font-display text-white dark:text-white light:text-slate-900 flex items-center gap-2">
               <span>EXPLORE THE GRID</span>
               <span className="text-xs font-mono font-normal text-cyan-400 bg-cyan-950/60 border border-cyan-500/30 px-2 py-0.5 rounded-full">
                 {filteredAndSortedGames.length} {filteredAndSortedGames.length === 1 ? 'Title' : 'Titles'}
               </span>
             </h2>
-            <p className="text-xs text-slate-400 font-mono">
-              High-performance browser gaming â€¢ Zero downloads â€¢ Instant guest saves
+            <p className="text-xs text-slate-400 dark:text-slate-400 light:text-slate-600 font-mono">
+              High-performance browser gaming Ã¢â‚¬Â¢ Zero downloads Ã¢â‚¬Â¢ Instant guest saves
             </p>
           </div>
 
           {/* Search + Sort By Control Bar */}
           <div className="flex flex-wrap items-center gap-2.5 font-mono text-xs">
             {/* Sort Selector */}
-            <div className="flex items-center gap-1.5 bg-[#0B1120] border border-slate-800/80 rounded-xl px-3 py-2 text-slate-300">
-              <span className="text-slate-500 text-[11px]">SORT:</span>
+            <div className="flex items-center gap-1.5 bg-[#0B1120] dark:bg-[#0B1120] light:bg-white border border-slate-800/80 dark:border-slate-800/80 light:border-slate-300 rounded-xl px-3 py-2 text-slate-300 light:text-slate-700 shadow-sm">
+              <span className="text-slate-500 text-[11px] font-bold">SORT:</span>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortOrder)}
-                className="bg-transparent text-white outline-none font-bold cursor-pointer pr-1"
+                className="bg-transparent text-white dark:text-white light:text-slate-900 outline-none font-bold cursor-pointer pr-1"
               >
-                <option value="popular" className="bg-[#0B1120] text-white">ðŸ”¥ Most Played</option>
-                <option value="rating" className="bg-[#0B1120] text-white">â­ Top Rated</option>
-                <option value="newest" className="bg-[#0B1120] text-white">âš¡ Newest Releases</option>
-                <option value="alpha" className="bg-[#0B1120] text-white">ðŸ”¤ Title A-Z</option>
+                <option value="popular" className="bg-[#0B1120] text-white">Most Played</option>
+                <option value="rating" className="bg-[#0B1120] text-white">Top Rated</option>
+                <option value="newest" className="bg-[#0B1120] text-white">Newest Releases</option>
+                <option value="alpha" className="bg-[#0B1120] text-white">Title A-Z</option>
               </select>
             </div>
 
@@ -186,15 +175,16 @@ export default function HomePage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search titles, tags..."
-                className="w-full bg-[#0B1120] border border-slate-800/80 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 outline-none focus:border-cyan-400 transition-colors"
+                className="w-full bg-[#0B1120] dark:bg-[#0B1120] light:bg-white border border-slate-800/80 dark:border-slate-800/80 light:border-slate-300 rounded-xl px-3.5 py-2 text-xs text-white dark:text-white light:text-slate-900 placeholder-slate-500 outline-none focus:border-cyan-400 transition-colors shadow-sm"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
+                  aria-label="Clear Search"
                   className="absolute right-3 top-2 text-xs text-slate-400 hover:text-white"
                 >
-                  âœ•
+                  <X className="h-4 w-4" />
                 </button>
               )}
             </div>
@@ -205,6 +195,7 @@ export default function HomePage() {
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none font-mono text-xs">
           {categories.map((cat) => {
             const isSelected = selectedCategory === cat.id;
+            const IconComponent = cat.icon;
             return (
               <button
                 key={cat.id}
@@ -213,10 +204,10 @@ export default function HomePage() {
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
                   isSelected
                     ? 'bg-purple-600 text-white font-bold shadow-md shadow-purple-600/30'
-                    : 'bg-[#0B1120] border border-slate-800/80 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                    : 'bg-[#0B1120] dark:bg-[#0B1120] light:bg-white border border-slate-800/80 dark:border-slate-800/80 light:border-slate-200 text-slate-400 dark:text-slate-400 light:text-slate-700 hover:text-slate-200 hover:border-slate-700 shadow-sm'
                 }`}
               >
-                <span>{cat.icon}</span>
+                <IconComponent className={`h-4 w-4 ${isSelected ? 'text-white' : 'text-cyan-400'}`} />
                 <span>{cat.label}</span>
                 {cat.id === 'favorites' && favoritesList.length > 0 && (
                   <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-bold ${isSelected ? 'bg-black text-white' : 'bg-rose-950 text-rose-300'}`}>
@@ -245,7 +236,7 @@ export default function HomePage() {
                   onClick={handleLoadMore}
                   className="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-bold text-xs shadow-xl shadow-purple-950/40 transition-all active:scale-95 cursor-pointer flex items-center gap-2"
                 >
-                  <span>âš¡</span>
+                  <Sparkles className="h-4 w-4" />
                   <span>LOAD MORE PORTALS ({filteredAndSortedGames.length - visibleBatchCount} REMAINING)</span>
                 </button>
                 <span className="text-[11px] text-slate-500">
@@ -255,27 +246,32 @@ export default function HomePage() {
             )}
           </div>
         ) : (
-          <div className="text-center py-16 rounded-3xl border border-dashed border-slate-800 bg-[#0B1120]/40 space-y-3 font-mono">
-            <span className="text-3xl">
-              {selectedCategory === 'favorites' ? 'â¤ï¸' : 'ðŸ”'}
-            </span>
-            <p className="text-sm font-bold text-white">
+          <div className="text-center py-16 rounded-3xl border border-dashed border-slate-800 dark:border-slate-800 light:border-slate-300 bg-[#0B1120]/40 dark:bg-[#0B1120]/40 light:bg-slate-50 space-y-3 font-mono">
+            <div className="flex justify-center">
+              {selectedCategory === 'favorites' ? (
+                <Heart className="h-10 w-10 text-rose-400" />
+              ) : (
+                <Gamepad2 className="h-10 w-10 text-cyan-400" />
+              )}
+            </div>
+            <p className="text-sm font-bold text-white dark:text-white light:text-slate-900">
               {selectedCategory === 'favorites'
                 ? 'No favorite games bookmarked yet'
                 : `No games found in this category`}
             </p>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto">
+            <p className="text-xs text-slate-400 dark:text-slate-400 light:text-slate-600 max-w-sm mx-auto">
               {selectedCategory === 'favorites'
-                ? 'Hover over any game card and click the heart icon (ðŸ¤) to save it to your favorites.'
+                ? 'Hover over any game card and click the bookmark icon to save it to your library.'
                 : 'Try adjusting your search query or selecting a different category filter.'}
             </p>
             {selectedCategory === 'favorites' && (
               <button
                 type="button"
                 onClick={() => setSelectedCategory('all')}
-                className="mt-2 inline-block px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all cursor-pointer"
+                className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all cursor-pointer"
               >
-                Browse All Games â†’
+                <span>Browse All Games</span>
+                <ArrowRight className="h-3.5 w-3.5" />
               </button>
             )}
           </div>
@@ -285,15 +281,15 @@ export default function HomePage() {
 
       {/* 4. Global Anti-Cheat Tournament Hall */}
       <section id="compete" className="space-y-4 pt-4 scroll-mt-24">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 dark:border-slate-800/80 light:border-slate-200 pb-3">
           <div className="space-y-1">
-            <h2 className="text-lg sm:text-xl font-black font-display text-white flex items-center gap-2">
+            <h2 className="text-lg sm:text-xl font-black font-display text-white dark:text-white light:text-slate-900 flex items-center gap-2">
               <span>GLOBAL TOURNAMENT HALL</span>
               <span className="text-[10px] font-mono text-amber-400 bg-amber-950/60 border border-amber-500/30 px-2 py-0.5 rounded-full font-bold">
                 LIVE
               </span>
             </h2>
-            <p className="text-xs font-mono text-slate-400">
+            <p className="text-xs font-mono text-slate-400 dark:text-slate-400 light:text-slate-600">
               Verified global leaderboards with anti-cheat replay validation
             </p>
           </div>

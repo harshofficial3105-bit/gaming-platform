@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { leaderboardStore } from '@/lib/leaderboard/store';
 import { getGameBySlug } from '@/lib/games';
+import { dispatchNotification } from '@/lib/notifications';
 
 export async function POST(req: NextRequest) {
   try {
@@ -68,6 +69,32 @@ export async function POST(req: NextRequest) {
 
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 400 });
+    }
+
+    // 5. Calculate verified rank and trigger Real-Time Notification
+    if (userId) {
+      try {
+        const rankings = leaderboardStore.getLeaderboard(gameId, 'all-time');
+        const rank = rankings.findIndex((r) => r.userId === userId) + 1;
+
+        if (rank > 0) {
+          await dispatchNotification({
+            userId,
+            type: 'rank_update',
+            priority: rank <= 10 ? 'high' : 'normal',
+            title: `Rank #${rank} on ${game?.title || gameId}!`,
+            message: `Your score of ${score.toLocaleString()} PTS placed you at Rank #${rank} on the global leaderboard.`,
+            actionUrl: `/leaderboards?game=${gameId}`,
+            metadata: {
+              game_slug: gameId,
+              score,
+              new_rank: rank,
+            },
+          });
+        }
+      } catch (notifErr) {
+        console.warn('[Leaderboard] Notification trigger bypassed:', notifErr);
+      }
     }
 
     return NextResponse.json({
