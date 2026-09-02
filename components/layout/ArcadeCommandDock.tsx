@@ -97,6 +97,10 @@ export function ArcadeCommandDock() {
             <Link href="/#explore" className="hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors">
               DISCOVER
             </Link>
+            <Link href="/#io-arena" className="hover:text-cyan-500 dark:hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-bold text-indigo-600 dark:text-cyan-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-ping" />
+              <span>.IO ARENA</span>
+            </Link>
             <Link href="/leaderboards" className="hover:text-amber-500 dark:hover:text-amber-400 transition-colors flex items-center gap-1.5">
               <Trophy className="h-3.5 w-3.5 text-amber-500" />
               <span>LEADERBOARDS</span>
@@ -248,7 +252,7 @@ export function ArcadeCommandDock() {
                 />
               ) : (
                 <span className="text-base group-hover/profile:scale-110 transition-transform">
-                  {avatar || '🤖'}
+                  {avatar || 'ðŸ¤–'}
                 </span>
               )}
             </Link>

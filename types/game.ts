@@ -1,12 +1,16 @@
-export type GameCategory = 
-  | 'action'
-  | 'arcade'
-  | 'puzzle'
-  | 'strategy'
-  | 'sports'
+export type GameCategory =
+  | 'shooting'
   | 'racing'
-  | 'adventure'
-  | 'casual';
+  | 'board'
+  | 'action'
+  | 'puzzle'
+  | 'battle'
+  | 'strategy'
+  | 'survival'
+  | 'arcade'
+  | 'casual'
+  | 'sports'
+  | 'adventure';
 
 export type GameOrientation = 'landscape' | 'portrait' | 'any';
 
@@ -54,4 +58,11 @@ export interface Game {
 
   // Dynamic Leaderboard & Anti-Cheat Metadata
   leaderboard?: LeaderboardConfig;
+
+  // .IO Game Arena Metadata
+  isIoGame?: boolean;
+  multiplayerMode?: '1v1' | 'battle-royale' | 'co-op' | 'ffa';
+  basePlayerCount?: number;
+  serverRegions?: string[];
+  isTrendingIo?: boolean;
 }

@@ -2,10 +2,10 @@
 
 import React, { useState, useMemo } from 'react';
 import { HeroConduit } from '@/components/home/HeroConduit';
-import { HeroCarousel } from '@/components/home/HeroCarousel';
 import { PlayModeSelector, ActivePlayMode } from '@/components/home/PlayModeSelector';
 import { ContinuePlayingShelf } from '@/components/vault/ContinuePlayingShelf';
 import { GamePortal } from '@/components/ui/GamePortal';
+import { IoArenaContainer } from '@/components/io-games/IoArenaContainer';
 import { Leaderboard } from '@/components/game/Leaderboard';
 import { getAllGames, ExtendedGame } from '@/lib/games';
 import { useGuestVault } from '@/hooks/useGuestVault';
@@ -24,6 +24,7 @@ import {
   Compass,
   Layers,
   ArrowRight,
+  Zap,
 } from 'lucide-react';
 
 type SortOrder = 'popular' | 'rating' | 'newest' | 'alpha';
@@ -53,7 +54,7 @@ export default function HomePage() {
     return counts;
   }, [allGames]);
 
-  // Filter and Sort Engine
+  // Filter and Sort Engine for General Catalog Grid
   const filteredAndSortedGames = useMemo(() => {
     let result = [...allGames];
 
@@ -86,7 +87,9 @@ export default function HomePage() {
       if (sortBy === 'popular' || sortBy === 'rating') {
         return (b.rating || 0) - (a.rating || 0);
       }
-      if (sortBy === 'newest') { return new Date(b.publishedAt || 0).getTime() - new Date(a.publishedAt || 0).getTime(); }
+      if (sortBy === 'newest') {
+        return new Date(b.publishedAt || 0).getTime() - new Date(a.publishedAt || 0).getTime();
+      }
       if (sortBy === 'alpha') {
         return a.title.localeCompare(b.title);
       }
@@ -115,7 +118,7 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-12">
       
       {/* 1. Hero Command Stage */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-stretch">
@@ -138,33 +141,33 @@ export default function HomePage() {
       <section id="explore" className="space-y-6 scroll-mt-24">
         
         {/* Section Header with Dynamic Controls */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 border-b border-slate-800/80 dark:border-slate-800/80 light:border-slate-200 pb-4">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 border-b border-slate-200 dark:border-slate-800/80 pb-4">
           <div className="space-y-1">
-            <h2 className="text-xl sm:text-2xl font-black font-display text-white dark:text-white light:text-slate-900 flex items-center gap-2">
+            <h2 className="text-xl sm:text-2xl font-black font-display text-slate-900 dark:text-white flex items-center gap-2">
               <span>EXPLORE THE GRID</span>
-              <span className="text-xs font-mono font-normal text-cyan-400 bg-cyan-950/60 border border-cyan-500/30 px-2 py-0.5 rounded-full">
+              <span className="text-xs font-mono font-normal text-cyan-700 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/60 border border-cyan-200 dark:border-cyan-500/30 px-2 py-0.5 rounded-full">
                 {filteredAndSortedGames.length} {filteredAndSortedGames.length === 1 ? 'Title' : 'Titles'}
               </span>
             </h2>
-            <p className="text-xs text-slate-400 dark:text-slate-400 light:text-slate-600 font-mono">
-              High-performance browser gaming Ã¢â‚¬Â¢ Zero downloads Ã¢â‚¬Â¢ Instant guest saves
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+              High-performance browser gaming • Zero downloads • Instant guest saves
             </p>
           </div>
 
           {/* Search + Sort By Control Bar */}
           <div className="flex flex-wrap items-center gap-2.5 font-mono text-xs">
             {/* Sort Selector */}
-            <div className="flex items-center gap-1.5 bg-[#0B1120] dark:bg-[#0B1120] light:bg-white border border-slate-800/80 dark:border-slate-800/80 light:border-slate-300 rounded-xl px-3 py-2 text-slate-300 light:text-slate-700 shadow-sm">
+            <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-[#0B1120] border border-slate-200 dark:border-slate-800/80 rounded-xl px-3 py-2 text-slate-700 dark:text-slate-300 shadow-sm">
               <span className="text-slate-500 text-[11px] font-bold">SORT:</span>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortOrder)}
-                className="bg-transparent text-white dark:text-white light:text-slate-900 outline-none font-bold cursor-pointer pr-1"
+                className="bg-transparent text-slate-900 dark:text-white outline-none font-bold cursor-pointer pr-1"
               >
-                <option value="popular" className="bg-[#0B1120] text-white">Most Played</option>
-                <option value="rating" className="bg-[#0B1120] text-white">Top Rated</option>
-                <option value="newest" className="bg-[#0B1120] text-white">Newest Releases</option>
-                <option value="alpha" className="bg-[#0B1120] text-white">Title A-Z</option>
+                <option value="popular" className="bg-white dark:bg-[#0B1120] text-slate-900 dark:text-white">Most Played</option>
+                <option value="rating" className="bg-white dark:bg-[#0B1120] text-slate-900 dark:text-white">Top Rated</option>
+                <option value="newest" className="bg-white dark:bg-[#0B1120] text-slate-900 dark:text-white">Newest Releases</option>
+                <option value="alpha" className="bg-white dark:bg-[#0B1120] text-slate-900 dark:text-white">Title A-Z</option>
               </select>
             </div>
 
@@ -175,14 +178,14 @@ export default function HomePage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search titles, tags..."
-                className="w-full bg-[#0B1120] dark:bg-[#0B1120] light:bg-white border border-slate-800/80 dark:border-slate-800/80 light:border-slate-300 rounded-xl px-3.5 py-2 text-xs text-white dark:text-white light:text-slate-900 placeholder-slate-500 outline-none focus:border-cyan-400 transition-colors shadow-sm"
+                className="w-full bg-slate-50 dark:bg-[#0B1120] border border-slate-200 dark:border-slate-800/80 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-500 outline-none focus:border-cyan-400 transition-colors shadow-sm"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
                   aria-label="Clear Search"
-                  className="absolute right-3 top-2 text-xs text-slate-400 hover:text-white"
+                  className="absolute right-3 top-2 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-white"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -204,13 +207,13 @@ export default function HomePage() {
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
                   isSelected
                     ? 'bg-purple-600 text-white font-bold shadow-md shadow-purple-600/30'
-                    : 'bg-[#0B1120] dark:bg-[#0B1120] light:bg-white border border-slate-800/80 dark:border-slate-800/80 light:border-slate-200 text-slate-400 dark:text-slate-400 light:text-slate-700 hover:text-slate-200 hover:border-slate-700 shadow-sm'
+                    : 'bg-white dark:bg-[#0B1120] border border-slate-200 dark:border-slate-800/80 text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700 shadow-sm'
                 }`}
               >
-                <IconComponent className={`h-4 w-4 ${isSelected ? 'text-white' : 'text-cyan-400'}`} />
+                <IconComponent className={`h-4 w-4 ${isSelected ? 'text-white' : 'text-cyan-500 dark:text-cyan-400'}`} />
                 <span>{cat.label}</span>
                 {cat.id === 'favorites' && favoritesList.length > 0 && (
-                  <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-bold ${isSelected ? 'bg-black text-white' : 'bg-rose-950 text-rose-300'}`}>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-bold ${isSelected ? 'bg-black text-white' : 'bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300'}`}>
                     {favoritesList.length}
                   </span>
                 )}
@@ -246,20 +249,20 @@ export default function HomePage() {
             )}
           </div>
         ) : (
-          <div className="text-center py-16 rounded-3xl border border-dashed border-slate-800 dark:border-slate-800 light:border-slate-300 bg-[#0B1120]/40 dark:bg-[#0B1120]/40 light:bg-slate-50 space-y-3 font-mono">
+          <div className="text-center py-16 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0B1120]/40 space-y-3 font-mono">
             <div className="flex justify-center">
               {selectedCategory === 'favorites' ? (
-                <Heart className="h-10 w-10 text-rose-400" />
+                <Heart className="h-10 w-10 text-rose-500" />
               ) : (
-                <Gamepad2 className="h-10 w-10 text-cyan-400" />
+                <Gamepad2 className="h-10 w-10 text-cyan-500" />
               )}
             </div>
-            <p className="text-sm font-bold text-white dark:text-white light:text-slate-900">
+            <p className="text-sm font-bold text-slate-900 dark:text-white">
               {selectedCategory === 'favorites'
                 ? 'No favorite games bookmarked yet'
                 : `No games found in this category`}
             </p>
-            <p className="text-xs text-slate-400 dark:text-slate-400 light:text-slate-600 max-w-sm mx-auto">
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
               {selectedCategory === 'favorites'
                 ? 'Hover over any game card and click the bookmark icon to save it to your library.'
                 : 'Try adjusting your search query or selecting a different category filter.'}
@@ -279,17 +282,20 @@ export default function HomePage() {
 
       </section>
 
-      {/* 4. Global Anti-Cheat Tournament Hall */}
+      {/* 4. ⚡ .IO GAME ARENA (Dedicated Multiplayer Zone) */}
+      <IoArenaContainer />
+
+      {/* 5. Global Anti-Cheat Tournament Hall */}
       <section id="compete" className="space-y-4 pt-4 scroll-mt-24">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 dark:border-slate-800/80 light:border-slate-200 pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-3">
           <div className="space-y-1">
-            <h2 className="text-lg sm:text-xl font-black font-display text-white dark:text-white light:text-slate-900 flex items-center gap-2">
+            <h2 className="text-lg sm:text-xl font-black font-display text-slate-900 dark:text-white flex items-center gap-2">
               <span>GLOBAL TOURNAMENT HALL</span>
-              <span className="text-[10px] font-mono text-amber-400 bg-amber-950/60 border border-amber-500/30 px-2 py-0.5 rounded-full font-bold">
+              <span className="text-[10px] font-mono text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-500/30 px-2 py-0.5 rounded-full font-bold">
                 LIVE
               </span>
             </h2>
-            <p className="text-xs font-mono text-slate-400 dark:text-slate-400 light:text-slate-600">
+            <p className="text-xs font-mono text-slate-500 dark:text-slate-400">
               Verified global leaderboards with anti-cheat replay validation
             </p>
           </div>
