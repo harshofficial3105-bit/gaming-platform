@@ -1,7 +1,7 @@
 'use client';
 
-import { ArcadeCommandDock } from './ArcadeCommandDock';
+import { ArcadeNavigation } from '@/components/navigation/ArcadeNavigation';
 
 export function Navbar() {
-  return <ArcadeCommandDock />;
+  return <ArcadeNavigation />;
 }
