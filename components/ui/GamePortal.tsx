@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ExtendedGame } from '@/lib/games';
 import { GameImage } from '@/components/ui/GameImage';
 import { isFavorite, toggleFavorite } from '@/lib/storage/favorites';
+import { Heart, Flame, Star } from 'lucide-react';
 
 interface GamePortalProps {
   game: ExtendedGame;
@@ -69,7 +70,7 @@ export function GamePortal({ game, priority = false }: GamePortalProps) {
   return (
     <Link
       href={`/games/${game.slug}`}
-      className="group relative block w-full aspect-[4/3] rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-transparent hover:border-purple-500 hover:ring-2 hover:ring-purple-500/50 hover:shadow-[0_12px_36px_rgba(168,85,247,0.4)] transition-all duration-300 transform hover:-translate-y-1.5 cursor-pointer bg-[#0B1120]"
+      className="group relative block w-full aspect-[4/3] rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-200 dark:border-transparent hover:border-purple-500 hover:ring-2 hover:ring-purple-500/50 hover:shadow-[0_12px_36px_rgba(168,85,247,0.3)] transition-all duration-300 transform hover:-translate-y-1.5 cursor-pointer bg-white dark:bg-[#0B1120] shadow-sm"
     >
       {/* 1. Full-Bleed Game Thumbnail */}
       <GameImage
@@ -83,6 +84,7 @@ export function GamePortal({ game, priority = false }: GamePortalProps) {
       <button
         type="button"
         onClick={handleFavoriteClick}
+        aria-label={favorited ? 'Remove from favorites' : 'Add to favorites'}
         title={favorited ? 'Remove from favorites' : 'Add to favorites'}
         className={`absolute top-2.5 right-2.5 z-30 flex items-center justify-center h-7 w-7 rounded-full backdrop-blur-md border transition-all cursor-pointer active:scale-90 ${
           favorited
@@ -90,19 +92,17 @@ export function GamePortal({ game, priority = false }: GamePortalProps) {
             : 'bg-black/60 border-white/20 text-slate-300 opacity-0 group-hover:opacity-100 hover:bg-rose-950/80 hover:text-rose-400 hover:border-rose-500/60'
         }`}
       >
-        <span className="text-xs leading-none">
-          {favorited ? '❤️' : '🤍'}
-        </span>
+        <Heart className={`h-3.5 w-3.5 ${favorited ? 'fill-rose-400 text-rose-400' : 'text-white'}`} />
       </button>
 
       {/* 3. Default Title Pill on Bottom-Right */}
       <div className="absolute bottom-2.5 right-2.5 group-hover:opacity-0 transition-opacity duration-200 pointer-events-none">
-        <span className="px-2.5 py-1 rounded-xl bg-black/75 backdrop-blur-md border border-white/10 text-white font-sans font-bold text-[10px] sm:text-xs shadow-lg">
+        <span className="px-2.5 py-1 rounded-xl bg-black/80 dark:bg-black/75 backdrop-blur-md border border-white/20 dark:border-white/10 text-white font-sans font-bold text-[10px] sm:text-xs shadow-lg">
           {game.title}
         </span>
       </div>
 
-      {/* 4. HOVER OVERLAY HUD (Exact Poki-Style with Pure UTF-8) */}
+      {/* 4. HOVER OVERLAY HUD */}
       <div className="absolute inset-0 bg-gradient-to-t from-purple-950/95 via-indigo-950/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 sm:p-4 text-white z-20 pointer-events-none">
         
         {/* Game Title */}
@@ -110,7 +110,7 @@ export function GamePortal({ game, priority = false }: GamePortalProps) {
           {game.title}
         </h3>
 
-        {/* Metadata Row: [Category Pill] [Year] [▶ Plays] [👍 Likes] */}
+        {/* Metadata Row */}
         <div className="flex items-center gap-2 mt-1.5 font-mono text-[10px] sm:text-[11px]">
           
           {/* Category Pill */}
@@ -125,13 +125,13 @@ export function GamePortal({ game, priority = false }: GamePortalProps) {
 
           {/* Plays */}
           <span className="flex items-center gap-1 text-white font-bold">
-            <span className="text-cyan-400 text-[10px]">▶</span>
+            <Flame className="h-3 w-3 text-cyan-400" />
             <span>{formatPlays(playsCount)}</span>
           </span>
 
           {/* Likes / Rating */}
           <span className="flex items-center gap-1 text-white font-bold">
-            <span>👍</span>
+            <Star className="h-3 w-3 text-amber-400 fill-amber-400" />
             <span>{liveRating > 0 ? liveRating.toFixed(1) : '4.8'}</span>
           </span>
 

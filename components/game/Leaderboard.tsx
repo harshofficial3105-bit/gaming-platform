@@ -4,6 +4,20 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { getAllGames, ExtendedGame } from '@/lib/games';
 import { guestVault } from '@/lib/storage/guestVault';
+import {
+  Trophy,
+  Sparkles,
+  LogIn,
+  Upload,
+  ShieldCheck,
+  RefreshCw,
+  ChevronDown,
+  ChevronUp,
+  CheckCircle2,
+  X,
+  ArrowRight,
+  Medal,
+} from 'lucide-react';
 
 interface LeaderboardEntry {
   id: string;
@@ -39,7 +53,7 @@ export function Leaderboard({
   const [isExpanded, setIsExpanded] = useState(initialExpanded);
   const [timeframe, setTimeframe] = useState<TimeFrame>('all-time');
   const [playerBest, setPlayerBest] = useState<number>(0);
-  
+
   // Registered user status
   const [isRegistered, setIsRegistered] = useState(false);
   const [registeredUser, setRegisteredUser] = useState<{ id: string; name: string; avatar: string } | null>(null);
@@ -52,7 +66,7 @@ export function Leaderboard({
 
     const checkAuth = () => {
       try {
-        const raw = localStorage.getItem('arcadehub_user_profile');
+        const raw = localStorage.getItem('arcadehub_guest_user') || localStorage.getItem('arcadehub_user_profile');
         if (raw) {
           const user = JSON.parse(raw);
           if (user && user.id) {
@@ -60,7 +74,7 @@ export function Leaderboard({
             setRegisteredUser({
               id: user.id,
               name: user.username || user.email?.split('@')[0] || 'Registered Pilot',
-              avatar: user.avatar || '👑',
+              avatar: user.avatar || '🤖',
             });
             return;
           }
@@ -71,8 +85,8 @@ export function Leaderboard({
     };
 
     checkAuth();
-    window.addEventListener('arcadehub_auth_changed', checkAuth);
-    return () => window.removeEventListener('arcadehub_auth_changed', checkAuth);
+    window.addEventListener('arcadehub:user-change', checkAuth);
+    return () => window.removeEventListener('arcadehub:user-change', checkAuth);
   }, []);
 
   // 2. Fetch game-specific player best score
@@ -151,7 +165,7 @@ export function Leaderboard({
 
       const data = await res.json();
       if (res.ok) {
-        setSubmitMessage('✓ Score successfully published to Global Hall of Fame!');
+        setSubmitMessage('Score successfully published to Global Hall of Fame!');
         fetchLeaderboard();
       } else {
         setSubmitMessage(data.error || 'Failed to submit score.');
@@ -166,25 +180,25 @@ export function Leaderboard({
   const unitLabel = currentGame?.leaderboard?.unitLabel || 'PTS';
 
   return (
-    <div className="rounded-3xl border border-slate-800/80 bg-[#0B1120] p-4 sm:p-6 shadow-2xl space-y-6 font-sans">
+    <div className="rounded-3xl border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-[#0B1120] p-4 sm:p-6 shadow-xl shadow-slate-200/50 dark:shadow-2xl space-y-6 font-sans transition-colors">
       
       {/* 1. Header & Controls */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/80 pb-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800/80 pb-4">
         
         {/* Game Title & Anti-Cheat Badge */}
         <div className="space-y-1">
           <div className="flex items-center gap-2 font-mono">
-            <span className="flex items-center justify-center h-6 w-6 rounded-lg bg-amber-950/80 border border-amber-500/40 text-amber-400 font-bold text-xs">
-              🏆
+            <span className="flex items-center justify-center h-6 w-6 rounded-lg bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-500/40 text-amber-600 dark:text-amber-400 font-bold text-xs">
+              <Trophy className="h-3.5 w-3.5" />
             </span>
-            <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+            <span className="text-xs font-bold text-slate-800 dark:text-slate-300 uppercase tracking-wider">
               {currentGame?.title || 'Hall of Fame'}
             </span>
-            <span className="text-[10px] text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">
+            <span className="text-[10px] text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">
               VERIFIED 100% REAL
             </span>
           </div>
-          <p className="text-xs text-slate-400 font-mono">
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
             Anti-cheat verified rankings for registered pilots
           </p>
         </div>
@@ -195,10 +209,10 @@ export function Leaderboard({
             <select
               value={selectedGameId}
               onChange={(e) => setSelectedGameId(e.target.value)}
-              className="bg-[#050811] border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-white outline-none cursor-pointer font-bold focus:border-cyan-400"
+              className="bg-slate-50 dark:bg-[#050811] border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-white outline-none cursor-pointer font-bold focus:border-cyan-400"
             >
               {games.map((g) => (
-                <option key={g.id} value={g.id} className="bg-[#0B1120] text-white">
+                <option key={g.id} value={g.id} className="bg-white dark:bg-[#0B1120] text-slate-900 dark:text-white">
                   {g.title} ({g.category})
                 </option>
               ))}
@@ -206,7 +220,7 @@ export function Leaderboard({
           )}
 
           {/* Timeframe Filter Buttons */}
-          <div className="flex items-center bg-[#050811] rounded-xl p-1 border border-slate-800">
+          <div className="flex items-center bg-slate-100 dark:bg-[#050811] rounded-xl p-1 border border-slate-200 dark:border-slate-800">
             {(['all-time', 'weekly', 'daily'] as TimeFrame[]).map((tf) => (
               <button
                 key={tf}
@@ -215,7 +229,7 @@ export function Leaderboard({
                 className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase transition-all cursor-pointer ${
                   timeframe === tf
                     ? 'bg-amber-500 text-black shadow-sm'
-                    : 'text-slate-400 hover:text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 {tf === 'all-time' ? 'All-Time' : tf === 'weekly' ? 'Weekly' : 'Daily'}
@@ -227,26 +241,26 @@ export function Leaderboard({
       </div>
 
       {/* 2. Personal Standing & Claim Rank Banner */}
-      <div className="rounded-2xl border border-slate-800 bg-[#050811] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-mono text-xs shadow-inner">
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#050811] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-mono text-xs shadow-inner">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-[#0B1120] border border-slate-800 flex items-center justify-center text-lg shrink-0">
-            {isRegistered ? registeredUser?.avatar || '👑' : '🤖'}
+          <div className="h-10 w-10 rounded-xl bg-white dark:bg-[#0B1120] border border-slate-200 dark:border-slate-800 flex items-center justify-center text-lg shrink-0 shadow-sm">
+            {isRegistered ? registeredUser?.avatar || '🤖' : '🎮'}
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-white font-bold">
+              <span className="text-slate-900 dark:text-white font-bold">
                 {isRegistered ? registeredUser?.name : 'Guest Pilot'}
               </span>
               <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${
                 isRegistered 
-                  ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/30'
-                  : 'bg-slate-900 text-slate-400 border border-slate-800'
+                  ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30'
+                  : 'bg-slate-200 dark:bg-slate-900 text-slate-700 dark:text-slate-400 border border-slate-300 dark:border-slate-800'
               }`}>
                 {isRegistered ? 'REGISTERED ACCOUNT' : 'GUEST MODE'}
               </span>
             </div>
-            <p className="text-[10px] text-slate-400 mt-0.5">
-              Personal Best Record: <span className="text-amber-400 font-bold">{playerBest.toLocaleString()} {unitLabel}</span>
+            <p className="text-[10px] text-slate-600 dark:text-slate-400 mt-0.5">
+              Personal Best Record: <span className="text-amber-600 dark:text-amber-400 font-bold">{playerBest.toLocaleString()} {unitLabel}</span>
               {playerRank ? ` • Current Standing: Rank #${playerRank}` : ''}
             </p>
           </div>
@@ -261,7 +275,7 @@ export function Leaderboard({
               disabled={isSubmitting || playerBest <= 0}
               className="w-full sm:w-auto px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-black font-bold font-mono text-xs shadow-md transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
             >
-              <span>{isSubmitting ? '🔄' : '🏆'}</span>
+              {isSubmitting ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
               <span>{isSubmitting ? 'Posting...' : 'Publish Score to Hall of Fame'}</span>
             </button>
           ) : (
@@ -270,7 +284,7 @@ export function Leaderboard({
               onClick={handleOpenAuth}
               className="w-full sm:w-auto px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold font-mono text-xs shadow-md transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
             >
-              <span>👑</span>
+              <LogIn className="h-3.5 w-3.5" />
               <span>Sign In to Claim Rank</span>
             </button>
           )}
@@ -279,13 +293,18 @@ export function Leaderboard({
 
       {/* Submission Feedback Alert */}
       {submitMessage && (
-        <div className="rounded-xl border border-cyan-500/40 bg-cyan-950/30 p-3 text-xs font-mono text-cyan-300 flex items-center justify-between">
-          <span>{submitMessage}</span>
-          <button type="button" onClick={() => setSubmitMessage(null)} className="text-slate-400 hover:text-white">✕</button>
+        <div className="rounded-xl border border-cyan-300 dark:border-cyan-500/40 bg-cyan-50 dark:bg-cyan-950/30 p-3 text-xs font-mono text-cyan-800 dark:text-cyan-300 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-cyan-500" />
+            <span>{submitMessage}</span>
+          </div>
+          <button type="button" onClick={() => setSubmitMessage(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-white">
+            <X className="h-4 w-4" />
+          </button>
         </div>
       )}
 
-      {/* 3. Real Rankings Matrix (0 Fake Data) */}
+      {/* 3. Real Rankings Matrix */}
       {isLoading ? (
         <div className="py-12 text-center text-xs font-mono text-slate-500 animate-pulse">
           Synchronizing Real-Time Player Scores...
@@ -304,14 +323,14 @@ export function Leaderboard({
                 key={entry.id}
                 className={`flex items-center justify-between rounded-2xl px-4 py-2.5 transition-all ${
                   isSelf
-                    ? 'bg-cyan-950/40 border border-cyan-500/60 shadow-lg shadow-cyan-500/10'
+                    ? 'bg-cyan-50 dark:bg-cyan-950/40 border border-cyan-400 dark:border-cyan-500/60 shadow-md shadow-cyan-500/10'
                     : isGold
-                    ? 'bg-gradient-to-r from-amber-500/15 via-[#050811] to-transparent border border-amber-500/30 text-amber-200'
+                    ? 'bg-gradient-to-r from-amber-50 dark:from-amber-500/15 via-white dark:via-[#050811] to-transparent border border-amber-300 dark:border-amber-500/30 text-amber-900 dark:text-amber-200'
                     : isSilver
-                    ? 'bg-gradient-to-r from-slate-400/10 via-[#050811] to-transparent border border-slate-700/60 text-slate-200'
+                    ? 'bg-gradient-to-r from-slate-100 dark:from-slate-400/10 via-white dark:via-[#050811] to-transparent border border-slate-300 dark:border-slate-700/60 text-slate-800 dark:text-slate-200'
                     : isBronze
-                    ? 'bg-gradient-to-r from-orange-500/10 via-[#050811] to-transparent border border-orange-700/30 text-orange-200'
-                    : 'bg-[#050811]/80 border border-slate-800/80 text-slate-300 hover:border-slate-700'
+                    ? 'bg-gradient-to-r from-orange-50 dark:from-orange-500/10 via-white dark:via-[#050811] to-transparent border border-orange-300 dark:border-orange-700/30 text-orange-900 dark:text-orange-200'
+                    : 'bg-white dark:bg-[#050811]/80 border border-slate-200 dark:border-slate-800/80 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700 shadow-sm'
                 }`}
               >
                 {/* Rank & Player Info */}
@@ -323,16 +342,16 @@ export function Leaderboard({
                         : isSilver
                         ? 'bg-slate-300 text-black shadow-md'
                         : isBronze
-                        ? 'bg-orange-600 text-white shadow-md'
-                        : 'bg-slate-800 text-slate-400 text-xs'
+                        ? 'bg-orange-500 text-white shadow-md'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs'
                     }`}
                   >
-                    {isGold ? '🥇' : isSilver ? '🥈' : isBronze ? '🥉' : rank}
+                    {rank}
                   </span>
 
                   <div className="flex items-center gap-2.5 truncate">
-                    <span className="text-base">{entry.avatar || '👑'}</span>
-                    <span className="font-bold truncate text-white">
+                    <span className="text-base">{entry.avatar || '🤖'}</span>
+                    <span className="font-bold truncate text-slate-900 dark:text-white">
                       {entry.playerName}
                     </span>
                     {isSelf && (
@@ -340,7 +359,7 @@ export function Leaderboard({
                         YOU
                       </span>
                     )}
-                    <span className="text-[9px] text-slate-500 border border-slate-800 px-1 py-0.2 rounded bg-[#070B14] hidden sm:inline">
+                    <span className="text-[9px] text-slate-500 border border-slate-200 dark:border-slate-800 px-1 py-0.2 rounded bg-slate-50 dark:bg-[#070B14] hidden sm:inline">
                       {new Date(entry.submittedAt).toLocaleDateString()}
                     </span>
                   </div>
@@ -348,21 +367,21 @@ export function Leaderboard({
 
                 {/* Score */}
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="font-black text-white text-sm sm:text-base">
+                  <span className="font-black text-slate-900 dark:text-white text-sm sm:text-base">
                     {entry.score.toLocaleString()}
                   </span>
-                  <span className="text-[10px] text-cyan-400 font-bold">{entry.unitLabel || unitLabel}</span>
+                  <span className="text-[10px] text-cyan-600 dark:text-cyan-400 font-bold">{entry.unitLabel || unitLabel}</span>
                 </div>
               </div>
             );
           })}
         </div>
       ) : (
-        /* Real Clean Empty State (0 Fake Rows) */
-        <div className="py-12 px-4 text-center rounded-2xl border border-dashed border-slate-800 bg-[#050811]/40 space-y-3 font-mono">
-          <span className="text-3xl">🏆</span>
+        /* Real Clean Empty State */
+        <div className="py-12 px-4 text-center rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#050811]/40 space-y-3 font-mono">
+          <Trophy className="h-10 w-10 text-amber-500 mx-auto" />
           <div className="space-y-1">
-            <h4 className="text-sm font-bold text-slate-300">
+            <h4 className="text-sm font-bold text-slate-800 dark:text-slate-300">
               No Registered Champion Scores for {timeframe === 'all-time' ? 'All-Time' : timeframe === 'weekly' ? 'This Week' : 'Today'} Yet
             </h4>
             <p className="text-xs text-slate-500 max-w-sm mx-auto">
@@ -371,30 +390,32 @@ export function Leaderboard({
           </div>
           <Link
             href={`/games/${currentGame?.slug || 'space-gem-collector'}`}
-            className="inline-block px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs transition-colors"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs transition-colors"
           >
-            Play {currentGame?.title || 'Space Gem Collector'} →
+            <span>Play {currentGame?.title || 'Space Gem Collector'}</span>
+            <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
       )}
 
       {/* 4. Expand / Collapse & Refresh Controls */}
       {entries.length > 5 && (
-        <div className="flex items-center justify-between pt-2 border-t border-slate-800/70 font-mono text-xs">
+        <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800/70 font-mono text-xs">
           <button
             type="button"
             onClick={() => setIsExpanded(!isExpanded)}
-            className="flex items-center gap-1.5 text-cyan-400 hover:text-cyan-300 font-bold transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 font-bold transition-colors cursor-pointer"
           >
-            <span>{isExpanded ? '▲ Collapse Matrix' : `▼ Expand All ${entries.length} Registered Contenders`}</span>
+            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            <span>{isExpanded ? 'Collapse Matrix' : `Expand All ${entries.length} Registered Contenders`}</span>
           </button>
 
           <button
             type="button"
             onClick={fetchLeaderboard}
-            className="text-slate-400 hover:text-slate-200 transition-colors cursor-pointer flex items-center gap-1 text-[11px]"
+            className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer flex items-center gap-1 text-[11px]"
           >
-            <span>🔄</span>
+            <RefreshCw className="h-3.5 w-3.5" />
             <span>Sync</span>
           </button>
         </div>
