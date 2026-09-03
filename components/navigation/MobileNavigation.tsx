@@ -101,7 +101,7 @@ export function MobileNavigation() {
                 className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-[#0D1530] border border-slate-200 dark:border-slate-800 hover:border-cyan-400"
               >
                 <div className="h-10 w-10 rounded-xl bg-cyan-500/10 flex items-center justify-center text-lg">
-                  {avatar || 'ðŸ¤–'}
+                  {avatar || 'Ã°Å¸Â¤â€“'}
                 </div>
                 <div>
                   <div className="text-xs font-bold text-slate-900 dark:text-white">

@@ -343,7 +343,7 @@ export function LeftSidebarNavigation({ navState }: LeftSidebarNavigationProps) 
                 className="h-full w-full object-cover group-hover/profile:scale-110 transition-transform"
               />
             ) : (
-              <span className="text-sm">{avatar || 'ðŸ¤–'}</span>
+              <span className="text-sm">{avatar || 'Ã°Å¸Â¤â€“'}</span>
             )}
           </div>
 

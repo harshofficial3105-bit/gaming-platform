@@ -51,7 +51,7 @@ export function PwaInstallPrompt() {
   if (!isVisible || !deferredPrompt) return null;
 
   return (
-    <div className="fixed bottom-20 md:bottom-6 right-4 z-40 max-w-sm w-full animate-fade-in font-sans">
+    <div className="fixed bottom-4 left-4 right-4 sm:left-6 sm:right-auto sm:bottom-6 z-40 max-w-sm w-full animate-fade-in font-sans">
       <div className="rounded-3xl border border-slate-200 dark:border-cyan-500/40 bg-white/95 dark:bg-[#0B1120]/95 backdrop-blur-md p-4 sm:p-5 shadow-2xl shadow-slate-300 dark:shadow-cyan-950/40 space-y-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">

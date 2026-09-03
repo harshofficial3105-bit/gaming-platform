@@ -21,12 +21,27 @@ export function ArcadeNavigation() {
           const currentState = stateRef.current;
           let nextState: NavigationState = currentState;
 
-          if (currentY < 70) {
-            nextState = 'expanded';
-          } else if (currentY >= 70 && currentY <= 150) {
-            nextState = 'collapsing';
-          } else if (currentY > 150) {
-            nextState = 'floating';
+          // Hysteresis logic preventing flickering and overlap:
+          // Downward: 0-90 expanded -> 90-190 collapsing -> >190 floating
+          // Upward: <170 drops out of floating into collapsing -> <70 returns to expanded
+          if (currentState === 'expanded') {
+            if (currentY >= 90 && currentY <= 190) {
+              nextState = 'collapsing';
+            } else if (currentY > 190) {
+              nextState = 'floating';
+            }
+          } else if (currentState === 'collapsing') {
+            if (currentY < 70) {
+              nextState = 'expanded';
+            } else if (currentY > 190) {
+              nextState = 'floating';
+            }
+          } else if (currentState === 'floating') {
+            if (currentY < 70) {
+              nextState = 'expanded';
+            } else if (currentY < 170) {
+              nextState = 'collapsing';
+            }
           }
 
           if (nextState !== currentState) {
@@ -55,10 +70,10 @@ export function ArcadeNavigation() {
 
       {/* 2. Desktop Navigation (>= lg) */}
       <div className="hidden lg:block">
-        {/* State 1 & 2: Right Gaming HUD (Expanded / Collapsing Rail) */}
+        {/* State 1 & 2: Right Gaming HUD (Expanded w-[240px] / Collapsing Rail w-[64px]) */}
         <RightSidebarNavigation navState={navState} />
 
-        {/* State 3: Floating Top Command Dock */}
+        {/* State 3: Floating Top Command Dock (Appears safely after scrolling past hero) */}
         <CompactFloatingNavigation isVisible={navState === 'floating'} />
       </div>
     </>

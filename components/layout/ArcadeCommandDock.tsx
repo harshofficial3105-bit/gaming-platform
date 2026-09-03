@@ -252,7 +252,7 @@ export function ArcadeCommandDock() {
                 />
               ) : (
                 <span className="text-base group-hover/profile:scale-110 transition-transform">
-                  {avatar || 'ðŸ¤–'}
+                  {avatar || 'Ã°Å¸Â¤â€“'}
                 </span>
               )}
             </Link>
