@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { getIoArenaGames, ExtendedGame } from '@/lib/games';
 import { useIoPlayerCounts } from '@/hooks/useIoPlayerCounts';
 import { IoArenaHero } from '@/components/io-arena/IoArenaHero';
+import { NavigationSafeArea } from '@/components/navigation/NavigationSafeArea';
 import { IoFeaturedGames } from '@/components/io-arena/IoFeaturedGames';
 import { IoArenaCategories, ArenaCategoryType } from '@/components/io-arena/IoArenaCategories';
 import { IoGameGrid } from '@/components/io-arena/IoGameGrid';
@@ -61,8 +62,10 @@ export default function IoArenaPage() {
   return (
     <div className="space-y-12 py-2">
       
-      {/* 1. Immersive Hero Stage */}
-      <IoArenaHero />
+      {/* 1. Immersive Hero Stage with Navigation Safe Area */}
+      <NavigationSafeArea>
+        <IoArenaHero />
+      </NavigationSafeArea>
 
       {/* 2. Featured In The Arena */}
       <IoFeaturedGames games={allIoGames} />

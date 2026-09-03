@@ -3,6 +3,7 @@ import { Outfit, Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { Navbar } from '@/components/layout/Navbar';
 import { NavigationLayoutWrapper } from '@/components/navigation/NavigationLayoutWrapper';
+import { NavigationProvider } from '@/components/navigation/NavigationContext';
 import { MobileBottomDock } from '@/components/layout/MobileBottomDock';
 import { CommandPaletteModal } from '@/components/ui/CommandPaletteModal';
 import { AuthModal } from '@/components/auth/AuthModal';
@@ -65,27 +66,29 @@ export default function RootLayout({
         className="min-h-screen bg-quantum-grid text-slate-100 dark:text-slate-100 light:text-slate-900 flex flex-col antialiased selection:bg-cyan-400 selection:text-black font-sans pb-16 md:pb-0 transition-colors duration-200"
       >
         <ThemeProvider>
-          <Navbar />
-          
-          {/* Responsive Layout Coordinating with Left Sidebar & Floating Nav Transformation */}
-          <NavigationLayoutWrapper>
-            {/* Main Stage */}
-            <main className="flex-1 w-full max-w-[1750px] mx-auto px-2 sm:px-4 py-4">
-              {children}
-            </main>
+          <NavigationProvider>
+            <Navbar />
             
-            {/* Global Player Platform Footer */}
-            <Footer />
-          </NavigationLayoutWrapper>
-          
-          {/* Global Floating Actions & Overlays */}
-          <MobileBottomDock />
-          <CommandPaletteModal />
-          <AuthModal />
-          <NetworkStatusBanner />
-          <GlobalFeedbackModal />
-          <KeyboardShortcutsModal />
-          <PwaInstallPrompt />
+            {/* Responsive Layout Coordinating with Right HUD & Floating Nav Transformation */}
+            <NavigationLayoutWrapper>
+              {/* Main Stage */}
+              <main className="flex-1 w-full max-w-[1750px] mx-auto px-2 sm:px-4 py-4">
+                {children}
+              </main>
+              
+              {/* Global Player Platform Footer */}
+              <Footer />
+            </NavigationLayoutWrapper>
+            
+            {/* Global Floating Actions & Overlays */}
+            <MobileBottomDock />
+            <CommandPaletteModal />
+            <AuthModal />
+            <NetworkStatusBanner />
+            <GlobalFeedbackModal />
+            <KeyboardShortcutsModal />
+            <PwaInstallPrompt />
+          </NavigationProvider>
         </ThemeProvider>
       </body>
     </html>

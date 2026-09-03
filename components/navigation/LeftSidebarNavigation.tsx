@@ -20,7 +20,7 @@ import { useGuestVault } from '@/hooks/useGuestVault';
 import { NotificationBell } from '../notifications/NotificationBell';
 import { ThemeToggle } from '../theme/ThemeToggle';
 import { MyGamesPopover } from '../player/MyGamesPopover';
-import { NavigationState } from './ArcadeNavigation';
+import { NavigationState } from './NavigationContext';
 
 interface LeftSidebarNavigationProps {
   navState: NavigationState;
@@ -343,7 +343,7 @@ export function LeftSidebarNavigation({ navState }: LeftSidebarNavigationProps) 
                 className="h-full w-full object-cover group-hover/profile:scale-110 transition-transform"
               />
             ) : (
-              <span className="text-sm">{avatar || 'Ã°Å¸Â¤â€“'}</span>
+              <span className="text-sm">{avatar || 'ÃƒÂ°Ã…Â¸Ã‚Â¤Ã¢â‚¬â€œ'}</span>
             )}
           </div>
 

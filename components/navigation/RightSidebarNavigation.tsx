@@ -20,7 +20,7 @@ import { useGuestVault } from '@/hooks/useGuestVault';
 import { NotificationBell } from '../notifications/NotificationBell';
 import { ThemeToggle } from '../theme/ThemeToggle';
 import { MyGamesPopover } from '../player/MyGamesPopover';
-import { NavigationState } from './ArcadeNavigation';
+import { NavigationState } from './NavigationContext';
 
 interface RightSidebarNavigationProps {
   navState: NavigationState;
@@ -343,7 +343,7 @@ export function RightSidebarNavigation({ navState }: RightSidebarNavigationProps
                 className="h-full w-full object-cover group-hover/profile:scale-110 transition-transform"
               />
             ) : (
-              <span className="text-xs">{avatar || '🤖'}</span>
+              <span className="text-xs">{avatar || 'ðŸ¤–'}</span>
             )}
           </div>
 

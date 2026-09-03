@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { HeroConduit } from '@/components/home/HeroConduit';
+import { NavigationSafeArea } from '@/components/navigation/NavigationSafeArea';
 import { PlayModeSelector, ActivePlayMode } from '@/components/home/PlayModeSelector';
 import { ContinuePlayingShelf } from '@/components/vault/ContinuePlayingShelf';
 import { GamePortal } from '@/components/ui/GamePortal';
@@ -120,8 +121,9 @@ export default function HomePage() {
   return (
     <div className="space-y-12">
       
-      {/* 1. Hero Command Stage */}
-      <section className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-stretch">
+      {/* 1. Hero Command Stage with Section-Level Navigation Safe Area */}
+      <NavigationSafeArea>
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-stretch">
         <div className="lg:col-span-2">
           {featuredGame && <HeroConduit featuredGame={featuredGame} />}
         </div>
@@ -132,7 +134,8 @@ export default function HomePage() {
             gameCounts={gameCounts}
           />
         </div>
-      </section>
+        </section>
+      </NavigationSafeArea>
 
       {/* 2. Instant Resume Guest Vault Shelf */}
       <ContinuePlayingShelf />
@@ -282,7 +285,7 @@ export default function HomePage() {
 
       </section>
 
-      {/* 4. 🎯 .IO GAME ARENA (Dedicated Multiplayer Zone) */}
+      {/* 4. ðŸŽ¯ .IO GAME ARENA (Dedicated Multiplayer Zone) */}
       <IoArenaPortal />
 
       {/* 5. Global Anti-Cheat Tournament Hall */}
