@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Outfit, Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { Navbar } from '@/components/layout/Navbar';
+import { NavigationLayoutWrapper } from '@/components/navigation/NavigationLayoutWrapper';
 import { MobileBottomDock } from '@/components/layout/MobileBottomDock';
 import { CommandPaletteModal } from '@/components/ui/CommandPaletteModal';
 import { AuthModal } from '@/components/auth/AuthModal';
@@ -65,13 +66,17 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <Navbar />
-          {/* Main Stage */}
-          <main className="flex-1 w-full max-w-[1750px] mx-auto px-2 sm:px-4 py-4">
-            {children}
-          </main>
           
-          {/* Global Player Platform Footer */}
-          <Footer />
+          {/* Responsive Layout Coordinating with Left Sidebar & Floating Nav Transformation */}
+          <NavigationLayoutWrapper>
+            {/* Main Stage */}
+            <main className="flex-1 w-full max-w-[1750px] mx-auto px-2 sm:px-4 py-4">
+              {children}
+            </main>
+            
+            {/* Global Player Platform Footer */}
+            <Footer />
+          </NavigationLayoutWrapper>
           
           {/* Global Floating Actions & Overlays */}
           <MobileBottomDock />
