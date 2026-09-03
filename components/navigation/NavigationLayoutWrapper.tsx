@@ -1,34 +1,13 @@
-'use client';
+import React from 'react';
 
-import React, { useState, useEffect } from 'react';
-
+/**
+ * NavigationLayoutWrapper
+ * Provides a permanently stable layout geometry for the main website content.
+ * Does NOT animate or change padding on scroll, ensuring 100% zero layout shift.
+ */
 export function NavigationLayoutWrapper({ children }: { children: React.ReactNode }) {
-  const [isScrolled, setIsScrolled] = useState(false);
-
-  useEffect(() => {
-    // Initial check
-    const currentY = window.scrollY || window.pageYOffset;
-    if (currentY > 140) {
-      setIsScrolled(true);
-    }
-
-    const handleNavTransform = (e: Event) => {
-      const customEvent = e as CustomEvent<{ isScrolled: boolean }>;
-      if (customEvent.detail) {
-        setIsScrolled(customEvent.detail.isScrolled);
-      }
-    };
-
-    window.addEventListener('arcadehub:nav-transform', handleNavTransform);
-    return () => window.removeEventListener('arcadehub:nav-transform', handleNavTransform);
-  }, []);
-
   return (
-    <div
-      className={`transition-all duration-600 ease-[cubic-bezier(0.34,1.15,0.64,1)] w-full flex flex-col flex-1 ${
-        isScrolled ? 'lg:pl-0' : 'lg:pl-72'
-      }`}
-    >
+    <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:pl-[272px] lg:pr-8 flex flex-col flex-1">
       {children}
     </div>
   );

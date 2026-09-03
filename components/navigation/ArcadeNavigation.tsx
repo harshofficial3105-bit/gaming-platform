@@ -5,35 +5,36 @@ import { LeftSidebarNavigation } from './LeftSidebarNavigation';
 import { CompactFloatingNavigation } from './CompactFloatingNavigation';
 import { MobileNavigation } from './MobileNavigation';
 
+export type NavigationState = 'expanded' | 'collapsing' | 'floating';
+
 export function ArcadeNavigation() {
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [navState, setNavState] = useState<NavigationState>('expanded');
   const [mounted, setMounted] = useState(false);
-  const isScrolledRef = useRef(false);
+  const stateRef = useRef<NavigationState>('expanded');
 
   useEffect(() => {
     setMounted(true);
 
     let ticking = false;
-    const EXPAND_THRESHOLD = 70;
-    const COMPACT_THRESHOLD = 140;
 
     const onScroll = () => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
           const currentY = window.scrollY || window.pageYOffset;
+          const currentState = stateRef.current;
+          let nextState: NavigationState = currentState;
 
-          if (!isScrolledRef.current && currentY > COMPACT_THRESHOLD) {
-            isScrolledRef.current = true;
-            setIsScrolled(true);
-            window.dispatchEvent(
-              new CustomEvent('arcadehub:nav-transform', { detail: { isScrolled: true } })
-            );
-          } else if (isScrolledRef.current && currentY < EXPAND_THRESHOLD) {
-            isScrolledRef.current = false;
-            setIsScrolled(false);
-            window.dispatchEvent(
-              new CustomEvent('arcadehub:nav-transform', { detail: { isScrolled: false } })
-            );
+          if (currentY < 70) {
+            nextState = 'expanded';
+          } else if (currentY >= 70 && currentY <= 150) {
+            nextState = 'collapsing';
+          } else if (currentY > 150) {
+            nextState = 'floating';
+          }
+
+          if (nextState !== currentState) {
+            stateRef.current = nextState;
+            setNavState(nextState);
           }
 
           ticking = false;
@@ -43,7 +44,6 @@ export function ArcadeNavigation() {
     };
 
     window.addEventListener('scroll', onScroll, { passive: true });
-    // Run initial check
     onScroll();
 
     return () => window.removeEventListener('scroll', onScroll);
@@ -58,11 +58,11 @@ export function ArcadeNavigation() {
 
       {/* 2. Desktop Navigation (>= lg) */}
       <div className="hidden lg:block">
-        {/* State 1: Before Scroll - Unique Left Sidebar Console */}
-        <LeftSidebarNavigation isVisible={!isScrolled} />
+        {/* State 1 & 2: Left Sidebar (Expanded / Collapsing Rail) */}
+        <LeftSidebarNavigation navState={navState} />
 
-        {/* State 2: After Scroll - Floating Compact Horizontal Navigation */}
-        <CompactFloatingNavigation isVisible={isScrolled} />
+        {/* State 3: Floating Top Command Dock */}
+        <CompactFloatingNavigation isVisible={navState === 'floating'} />
       </div>
     </>
   );

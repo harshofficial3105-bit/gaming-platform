@@ -10,7 +10,6 @@ import {
   Trophy,
   Users,
   Compass,
-  Shuffle,
 } from 'lucide-react';
 import { NotificationBell } from '../notifications/NotificationBell';
 import { ThemeToggle } from '../theme/ThemeToggle';
@@ -37,21 +36,21 @@ export function CompactFloatingNavigation({ isVisible }: CompactFloatingNavigati
   const navLinks = [
     { label: 'Grid', href: '/', active: pathname === '/' },
     { label: 'Discover', href: '/#explore', active: false },
-    { label: 'Leaderboards', href: '/leaderboards', icon: Trophy, active: pathname === '/leaderboards' },
+    { label: 'Ranks', href: '/leaderboards', icon: Trophy, active: pathname === '/leaderboards' },
     { label: 'Creators', href: '/creator', active: pathname.startsWith('/creator') },
-    { label: '.IO Arena', href: '/io-arena', isIo: true, active: false },
+    { label: '.IO', href: '/io-arena', isIo: true, active: pathname === '/io-arena' },
   ];
 
   return (
     <div
-      className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 transition-all duration-600 ease-[cubic-bezier(0.34,1.15,0.64,1)] font-mono ${
+      className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] font-mono ${
         isVisible
           ? 'opacity-100 translate-y-0 scale-100 blur-0 pointer-events-auto'
           : 'opacity-0 -translate-y-6 -translate-x-[calc(50%+30px)] scale-90 blur-xs pointer-events-none'
       }`}
     >
       <nav
-        aria-label="ArcadeHub Floating Control Dock"
+        aria-label="ArcadeHub Floating Command Dock"
         className="flex items-center gap-2 sm:gap-3 px-3.5 sm:px-4 py-2 rounded-full border border-indigo-200/90 dark:border-cyan-500/40 bg-white/90 dark:bg-[#060A18]/90 backdrop-blur-2xl shadow-2xl shadow-indigo-950/20 dark:shadow-[0_8px_32px_rgba(0,240,255,0.2)] text-xs transition-all ring-1 ring-cyan-400/20"
       >
         {/* Left: Compact Brand Pill */}
@@ -135,7 +134,7 @@ export function CompactFloatingNavigation({ isVisible }: CompactFloatingNavigati
               // eslint-disable-next-line @next/next/no-img-element
               <img src={avatar} alt="Avatar" className="h-full w-full object-cover" />
             ) : (
-              <span>{avatar || 'ðŸ¤–'}</span>
+              <span>{avatar || '🤖'}</span>
             )}
           </Link>
 
