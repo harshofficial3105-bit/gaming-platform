@@ -81,7 +81,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/#io-arena" className="hover:text-cyan-600 dark:hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-bold text-indigo-600 dark:text-cyan-400">
+                <Link href="/io-arena" className="hover:text-cyan-600 dark:hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-bold text-indigo-600 dark:text-cyan-400">
                   <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
                   <span>.IO Game Arena</span>
                 </Link>
@@ -191,12 +191,12 @@ export function Footer() {
 
         {/* Bottom Bar */}
         <div className="border-t border-slate-800/80 dark:border-slate-800/80 light:border-slate-200 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono text-slate-500">
-          <p>Â© {new Date().getFullYear()} ArcadeHub. Built for instant high-performance play.</p>
+          <p>Ã‚Â© {new Date().getFullYear()} ArcadeHub. Built for instant high-performance play.</p>
           <div className="flex items-center gap-4">
             <Link href="/" className="hover:text-slate-400 cursor-pointer">The Grid</Link>
-            <span>â€¢</span>
+            <span>Ã¢â‚¬Â¢</span>
             <Link href="/leaderboards" className="hover:text-slate-400 cursor-pointer">Leaderboards</Link>
-            <span>â€¢</span>
+            <span>Ã¢â‚¬Â¢</span>
             <Link href="/profile" className="hover:text-slate-400 cursor-pointer">Profile</Link>
           </div>
         </div>

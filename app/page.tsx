@@ -5,7 +5,7 @@ import { HeroConduit } from '@/components/home/HeroConduit';
 import { PlayModeSelector, ActivePlayMode } from '@/components/home/PlayModeSelector';
 import { ContinuePlayingShelf } from '@/components/vault/ContinuePlayingShelf';
 import { GamePortal } from '@/components/ui/GamePortal';
-import { IoArenaContainer } from '@/components/io-games/IoArenaContainer';
+import { IoArenaPortal } from '@/components/io-arena/IoArenaPortal';
 import { Leaderboard } from '@/components/game/Leaderboard';
 import { getAllGames, ExtendedGame } from '@/lib/games';
 import { useGuestVault } from '@/hooks/useGuestVault';
@@ -150,7 +150,7 @@ export default function HomePage() {
               </span>
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
-              High-performance browser gaming • Zero downloads • Instant guest saves
+              High-performance browser gaming â€¢ Zero downloads â€¢ Instant guest saves
             </p>
           </div>
 
@@ -282,8 +282,8 @@ export default function HomePage() {
 
       </section>
 
-      {/* 4. ⚡ .IO GAME ARENA (Dedicated Multiplayer Zone) */}
-      <IoArenaContainer />
+      {/* 4. âš¡ .IO GAME ARENA (Dedicated Multiplayer Zone) */}
+      <IoArenaPortal />
 
       {/* 5. Global Anti-Cheat Tournament Hall */}
       <section id="compete" className="space-y-4 pt-4 scroll-mt-24">

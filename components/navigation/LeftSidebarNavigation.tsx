@@ -117,9 +117,9 @@ export function LeftSidebarNavigation({ isVisible }: LeftSidebarNavigationProps)
     },
     {
       label: '.IO Arena',
-      href: '/#io-arena',
+      href: '/io-arena',
       icon: Zap,
-      active: false,
+      active: pathname === '/io-arena',
       badge: 'PVP',
       isSpecial: true,
     },
@@ -310,7 +310,7 @@ export function LeftSidebarNavigation({ isVisible }: LeftSidebarNavigationProps)
                 className="h-full w-full object-cover group-hover/profile:scale-110 transition-transform"
               />
             ) : (
-              <span className="text-base">{avatar || '🤖'}</span>
+              <span className="text-base">{avatar || 'ðŸ¤–'}</span>
             )}
           </div>
 

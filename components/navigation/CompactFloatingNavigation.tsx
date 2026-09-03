@@ -39,7 +39,7 @@ export function CompactFloatingNavigation({ isVisible }: CompactFloatingNavigati
     { label: 'Discover', href: '/#explore', active: false },
     { label: 'Leaderboards', href: '/leaderboards', icon: Trophy, active: pathname === '/leaderboards' },
     { label: 'Creators', href: '/creator', active: pathname.startsWith('/creator') },
-    { label: '.IO Arena', href: '/#io-arena', isIo: true, active: false },
+    { label: '.IO Arena', href: '/io-arena', isIo: true, active: false },
   ];
 
   return (
@@ -135,7 +135,7 @@ export function CompactFloatingNavigation({ isVisible }: CompactFloatingNavigati
               // eslint-disable-next-line @next/next/no-img-element
               <img src={avatar} alt="Avatar" className="h-full w-full object-cover" />
             ) : (
-              <span>{avatar || '🤖'}</span>
+              <span>{avatar || 'ðŸ¤–'}</span>
             )}
           </Link>
 

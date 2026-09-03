@@ -101,7 +101,7 @@ export function MobileNavigation() {
                 className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-[#0D1530] border border-slate-200 dark:border-slate-800 hover:border-cyan-400"
               >
                 <div className="h-10 w-10 rounded-xl bg-cyan-500/10 flex items-center justify-center text-lg">
-                  {avatar || '🤖'}
+                  {avatar || 'ðŸ¤–'}
                 </div>
                 <div>
                   <div className="text-xs font-bold text-slate-900 dark:text-white">
@@ -134,7 +134,7 @@ export function MobileNavigation() {
                 </Link>
 
                 <Link
-                  href="/#io-arena"
+                  href="/io-arena"
                   onClick={() => setIsOpen(false)}
                   className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-500/40 text-indigo-800 dark:text-cyan-300"
                 >
