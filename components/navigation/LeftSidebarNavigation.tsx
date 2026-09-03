@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   Radio,
   Layers,
+  Sparkles,
 } from 'lucide-react';
 import { useGuestVault } from '@/hooks/useGuestVault';
 import { NotificationBell } from '../notifications/NotificationBell';
@@ -115,26 +116,26 @@ export function LeftSidebarNavigation({ isVisible }: LeftSidebarNavigationProps)
       badge: null,
     },
     {
-      label: '.IO Games',
+      label: '.IO Arena',
       href: '/#io-arena',
       icon: Zap,
       active: false,
-      badge: 'ARENA',
+      badge: 'PVP',
       isSpecial: true,
     },
   ];
 
   return (
     <aside
-      aria-label="ArcadeHub Left Navigation"
-      className={`fixed top-4 left-4 bottom-4 w-68 rounded-3xl border border-slate-200/90 dark:border-cyan-500/25 bg-white/95 dark:bg-[#070C1E]/95 backdrop-blur-2xl shadow-2xl shadow-indigo-950/15 dark:shadow-[0_12px_40px_rgba(0,240,255,0.12)] p-4 flex flex-col justify-between z-40 transition-all duration-500 ease-out font-mono ${
+      aria-label="ArcadeHub Cyber Command Center"
+      className={`fixed top-4 left-4 z-40 w-64 rounded-3xl border border-slate-200/90 dark:border-cyan-500/25 bg-white/95 dark:bg-[#070C1E]/95 backdrop-blur-2xl shadow-2xl shadow-indigo-950/15 dark:shadow-[0_12px_40px_rgba(0,240,255,0.12)] p-4 flex flex-col justify-between font-mono overflow-hidden transition-all duration-600 ease-[cubic-bezier(0.34,1.15,0.64,1)] ${
         isVisible
-          ? 'opacity-100 translate-x-0 scale-100 pointer-events-auto'
-          : 'opacity-0 -translate-x-12 scale-95 pointer-events-none'
+          ? 'h-[calc(100vh-2rem)] opacity-100 translate-x-0 translate-y-0 scale-100 rounded-3xl blur-0 pointer-events-auto'
+          : 'h-16 opacity-0 translate-x-[calc(50vw-130px)] -translate-y-4 scale-75 rounded-full blur-xs pointer-events-none'
       }`}
     >
       {/* 1. Header & Brand Console */}
-      <div className="space-y-5">
+      <div className="space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-slate-200/80 dark:border-slate-800/80">
           <Link
             href="/"
@@ -143,15 +144,20 @@ export function LeftSidebarNavigation({ isVisible }: LeftSidebarNavigationProps)
             <span className="flex items-center justify-center h-9 w-9 rounded-2xl bg-gradient-to-tr from-cyan-500 via-indigo-600 to-purple-600 text-white shadow-lg shadow-cyan-500/30 group-hover/brand:scale-105 group-hover/brand:rotate-3 transition-all duration-300">
               <Gamepad2 className="h-5 w-5" />
             </span>
-            <span className="font-display tracking-wider text-xl font-black">
-              ARCADE<span className="text-cyan-500 dark:text-cyan-400">HUB</span>
-            </span>
+            <div className="flex flex-col">
+              <span className="font-display tracking-wider text-xl font-black leading-none">
+                ARCADE<span className="text-cyan-500 dark:text-cyan-400">HUB</span>
+              </span>
+              <span className="text-[9px] font-mono font-bold text-slate-400 dark:text-slate-500 tracking-widest mt-0.5">
+                SYSTEM ONLINE
+              </span>
+            </div>
           </Link>
 
           {/* Online Pulse Status */}
           <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
-            <span>ONLINE</span>
+            <span>LIVE</span>
           </span>
         </div>
 
@@ -180,7 +186,7 @@ export function LeftSidebarNavigation({ isVisible }: LeftSidebarNavigationProps)
                 href={item.href}
                 className={`group flex items-center justify-between px-3.5 py-2.5 rounded-2xl font-bold text-xs transition-all duration-200 ${
                   item.isSpecial
-                    ? 'bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-cyan-500/10 border border-indigo-200 dark:border-indigo-500/40 text-indigo-700 dark:text-cyan-300 hover:border-cyan-400 shadow-sm'
+                    ? 'bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-cyan-500/10 border border-indigo-200 dark:border-indigo-500/40 text-indigo-700 dark:text-cyan-300 hover:border-cyan-400 shadow-sm ring-1 ring-cyan-400/20'
                     : item.active
                     ? 'bg-gradient-to-r from-purple-600/15 to-cyan-500/15 border border-purple-400/40 dark:border-cyan-400/40 text-slate-900 dark:text-white shadow-sm'
                     : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/60'
@@ -219,7 +225,7 @@ export function LeftSidebarNavigation({ isVisible }: LeftSidebarNavigationProps)
       </div>
 
       {/* 3. Middle Tactical Controls */}
-      <div className="space-y-3 pt-4 border-t border-slate-200/80 dark:border-slate-800/80">
+      <div className="space-y-3 pt-3 border-t border-slate-200/80 dark:border-slate-800/80">
         
         {/* Quick Action Matrix */}
         <div className="grid grid-cols-3 gap-2">

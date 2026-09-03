@@ -23,7 +23,6 @@ interface CompactFloatingNavigationProps {
 export function CompactFloatingNavigation({ isVisible }: CompactFloatingNavigationProps) {
   const pathname = usePathname();
   const { avatar } = useGuestVault();
-  const [isJumping, setIsJumping] = useState(false);
 
   const handleOpenPalette = () => {
     window.dispatchEvent(new Event('open-command-palette'));
@@ -45,15 +44,15 @@ export function CompactFloatingNavigation({ isVisible }: CompactFloatingNavigati
 
   return (
     <div
-      className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-out font-mono ${
+      className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 transition-all duration-600 ease-[cubic-bezier(0.34,1.15,0.64,1)] font-mono ${
         isVisible
-          ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto'
-          : 'opacity-0 -translate-y-8 scale-90 pointer-events-none'
+          ? 'opacity-100 translate-y-0 scale-100 blur-0 pointer-events-auto'
+          : 'opacity-0 -translate-y-6 -translate-x-[calc(50%+30px)] scale-90 blur-xs pointer-events-none'
       }`}
     >
       <nav
         aria-label="ArcadeHub Floating Control Dock"
-        className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 rounded-full border border-indigo-200/90 dark:border-cyan-500/40 bg-white/90 dark:bg-[#060A18]/90 backdrop-blur-2xl shadow-2xl shadow-indigo-950/20 dark:shadow-[0_8px_32px_rgba(0,240,255,0.2)] text-xs transition-all"
+        className="flex items-center gap-2 sm:gap-3 px-3.5 sm:px-4 py-2 rounded-full border border-indigo-200/90 dark:border-cyan-500/40 bg-white/90 dark:bg-[#060A18]/90 backdrop-blur-2xl shadow-2xl shadow-indigo-950/20 dark:shadow-[0_8px_32px_rgba(0,240,255,0.2)] text-xs transition-all ring-1 ring-cyan-400/20"
       >
         {/* Left: Compact Brand Pill */}
         <Link
@@ -77,7 +76,7 @@ export function CompactFloatingNavigation({ isVisible }: CompactFloatingNavigati
                 <Link
                   key={link.label}
                   href={link.href}
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-indigo-500/10 to-cyan-500/15 border border-indigo-300 dark:border-indigo-500/50 text-indigo-700 dark:text-cyan-300 hover:border-cyan-400 font-black transition-all text-[11px] shadow-sm"
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-indigo-500/10 to-cyan-500/15 border border-indigo-300 dark:border-indigo-500/50 text-indigo-700 dark:text-cyan-300 hover:border-cyan-400 font-black transition-all text-[11px] shadow-sm ring-1 ring-cyan-400/20"
                 >
                   <Zap className="h-3 w-3 text-cyan-400 fill-current animate-pulse" />
                   <span>.IO</span>

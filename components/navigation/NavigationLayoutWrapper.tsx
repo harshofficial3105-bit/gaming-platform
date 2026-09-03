@@ -25,8 +25,8 @@ export function NavigationLayoutWrapper({ children }: { children: React.ReactNod
 
   return (
     <div
-      className={`transition-all duration-500 ease-out w-full flex flex-col flex-1 ${
-        isScrolled ? 'lg:pl-0' : 'lg:pl-76'
+      className={`transition-all duration-600 ease-[cubic-bezier(0.34,1.15,0.64,1)] w-full flex flex-col flex-1 ${
+        isScrolled ? 'lg:pl-0' : 'lg:pl-72'
       }`}
     >
       {children}
