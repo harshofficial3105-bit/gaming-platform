@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { LeftSidebarNavigation } from './LeftSidebarNavigation';
+import { RightSidebarNavigation } from './RightSidebarNavigation';
 import { CompactFloatingNavigation } from './CompactFloatingNavigation';
 import { MobileNavigation } from './MobileNavigation';
 
@@ -9,12 +9,9 @@ export type NavigationState = 'expanded' | 'collapsing' | 'floating';
 
 export function ArcadeNavigation() {
   const [navState, setNavState] = useState<NavigationState>('expanded');
-  const [mounted, setMounted] = useState(false);
   const stateRef = useRef<NavigationState>('expanded');
 
   useEffect(() => {
-    setMounted(true);
-
     let ticking = false;
 
     const onScroll = () => {
@@ -58,8 +55,8 @@ export function ArcadeNavigation() {
 
       {/* 2. Desktop Navigation (>= lg) */}
       <div className="hidden lg:block">
-        {/* State 1 & 2: Left Sidebar (Expanded / Collapsing Rail) */}
-        <LeftSidebarNavigation navState={navState} />
+        {/* State 1 & 2: Right Gaming HUD (Expanded / Collapsing Rail) */}
+        <RightSidebarNavigation navState={navState} />
 
         {/* State 3: Floating Top Command Dock */}
         <CompactFloatingNavigation isVisible={navState === 'floating'} />

@@ -46,7 +46,7 @@ export function CompactFloatingNavigation({ isVisible }: CompactFloatingNavigati
       className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] font-mono ${
         isVisible
           ? 'opacity-100 translate-y-0 scale-100 blur-0 pointer-events-auto'
-          : 'opacity-0 -translate-y-6 -translate-x-[calc(50%+30px)] scale-90 blur-xs pointer-events-none'
+          : 'opacity-0 -translate-y-6 -translate-x-[calc(50%-30px)] scale-90 blur-xs pointer-events-none'
       }`}
     >
       <nav
@@ -134,7 +134,7 @@ export function CompactFloatingNavigation({ isVisible }: CompactFloatingNavigati
               // eslint-disable-next-line @next/next/no-img-element
               <img src={avatar} alt="Avatar" className="h-full w-full object-cover" />
             ) : (
-              <span>{avatar || '🤖'}</span>
+              <span>{avatar || 'ðŸ¤–'}</span>
             )}
           </Link>
 

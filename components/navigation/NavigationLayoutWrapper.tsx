@@ -1,49 +1,23 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 
 /**
  * NavigationLayoutWrapper
- * Fixes the after-scrolling layout issue:
- * 1. On widescreen displays (>= 1536px / 1920px), the content is centered at max-w-[1360px] mx-auto.
- *    The 248px Left Sidebar sits inside the 280px left margin with zero collision.
- *    When scrolled, the content remains in the exact same centered position directly beneath the floating dock.
- * 2. On standard laptop displays (1024px to 1535px), content smoothly transitions from lg:pl-[264px]
- *    to lg:pl-0 upon scrolling, eliminating the empty black void on the left and centering under the dock.
+ * Permanently reserves 272px on the right side for the Right Gaming HUD.
+ * Never modifies padding, width, or margins on scroll, guaranteeing 100% Zero Content Layout Shift.
  */
 export function NavigationLayoutWrapper({ children }: { children: React.ReactNode }) {
-  const [isScrolled, setIsScrolled] = useState(false);
-
-  useEffect(() => {
-    let ticking = false;
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const scrollY = window.scrollY || window.pageYOffset;
-          if (scrollY > 120) {
-            setIsScrolled(true);
-          } else if (scrollY < 60) {
-            setIsScrolled(false);
-          }
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   return (
-    <div
-      className={`w-full max-w-[1360px] mx-auto px-4 sm:px-6 flex flex-col flex-1 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-        isScrolled
-          ? 'lg:pl-0 lg:pr-0'
-          : '2xl:pl-0 lg:pl-[264px] lg:pr-6'
-      }`}
-    >
+    <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:pl-8 lg:pr-[272px] flex flex-col flex-1 relative">
+      {/* Subtle Right HUD Ambient Composition Overlay (Deliberate Safe Zone) */}
+      <div
+        aria-hidden="true"
+        className="hidden lg:block absolute right-3 top-4 bottom-4 w-[248px] rounded-3xl border border-dashed border-indigo-300/20 dark:border-cyan-500/10 bg-gradient-to-b from-indigo-500/[0.02] via-transparent to-cyan-500/[0.02] pointer-events-none -z-10"
+      >
+        <div className="absolute inset-0 bg-[radial-gradient(#6366f110_1px,transparent_1px)] [background-size:20px_20px] rounded-3xl" />
+      </div>
+
       {children}
     </div>
   );
