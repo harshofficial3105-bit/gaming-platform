@@ -132,7 +132,7 @@ export function LeftSidebarNavigation({ navState }: LeftSidebarNavigationProps) 
       aria-label="ArcadeHub Left Command Center"
       className={`fixed top-4 left-4 z-40 rounded-3xl border border-slate-200/90 dark:border-cyan-500/25 bg-white/95 dark:bg-[#070C1E]/95 backdrop-blur-2xl shadow-2xl shadow-indigo-950/15 dark:shadow-[0_12px_40px_rgba(0,240,255,0.12)] p-3.5 flex flex-col justify-between font-mono overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
         isExpanded
-          ? 'w-[240px] h-[calc(100vh-2rem)] opacity-100 translate-x-0 translate-y-0 scale-100 blur-0 pointer-events-auto'
+          ? 'w-[248px] h-[calc(100vh-2rem)] opacity-100 translate-x-0 translate-y-0 scale-100 blur-0 pointer-events-auto'
           : isCollapsing
           ? 'w-[72px] h-[calc(100vh-2rem)] opacity-100 translate-x-0 translate-y-0 scale-100 blur-0 pointer-events-auto'
           : 'w-[72px] h-20 opacity-0 translate-x-[calc(50vw-130px)] -translate-y-4 scale-75 rounded-full blur-xs pointer-events-none'
@@ -152,7 +152,7 @@ export function LeftSidebarNavigation({ navState }: LeftSidebarNavigationProps) 
             {/* Brand Title (Fades smoothly when collapsing) */}
             <div
               className={`flex flex-col transition-all duration-300 ${
-                isExpanded ? 'opacity-100 max-w-[140px]' : 'opacity-0 max-w-0 overflow-hidden'
+                isExpanded ? 'opacity-100 max-w-[175px]' : 'opacity-0 max-w-0 overflow-hidden'
               }`}
             >
               <span className="font-display tracking-wider text-lg font-black leading-none whitespace-nowrap">
@@ -343,7 +343,7 @@ export function LeftSidebarNavigation({ navState }: LeftSidebarNavigationProps) 
                 className="h-full w-full object-cover group-hover/profile:scale-110 transition-transform"
               />
             ) : (
-              <span className="text-sm">{avatar || '🤖'}</span>
+              <span className="text-sm">{avatar || 'ðŸ¤–'}</span>
             )}
           </div>
 

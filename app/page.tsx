@@ -150,7 +150,7 @@ export default function HomePage() {
               </span>
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
-              High-performance browser gaming â€¢ Zero downloads â€¢ Instant guest saves
+              High-performance browser gaming • Zero downloads • Instant guest saves
             </p>
           </div>
 
@@ -282,7 +282,7 @@ export default function HomePage() {
 
       </section>
 
-      {/* 4. âš¡ .IO GAME ARENA (Dedicated Multiplayer Zone) */}
+      {/* 4. 🎯 .IO GAME ARENA (Dedicated Multiplayer Zone) */}
       <IoArenaPortal />
 
       {/* 5. Global Anti-Cheat Tournament Hall */}
