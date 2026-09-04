@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { ACTIVE_NAV_MODE } from '@/lib/config/navigationMode';
-import { CrazyGamesNav } from './crazygames/CrazyGamesNav';
+import { HybridNavigation } from './hybrid/HybridNavigation';
 import { useNavigation, NavigationState } from './NavigationContext';
 import { RightSidebarNavigation } from './RightSidebarNavigation';
 import { CompactFloatingNavigation } from './CompactFloatingNavigation';
@@ -13,9 +13,9 @@ export type { NavigationState };
 export function ArcadeNavigation() {
   const { navState, isScrolled } = useNavigation();
 
-  // 1. Experimental Mode: CrazyGames-Style Compact Rail + Expandable Overlay Drawer
-  if (ACTIVE_NAV_MODE === 'crazygames') {
-    return <CrazyGamesNav />;
+  // 1. Experimental Mode: ArcadeHub Hybrid Navigation (Left Rail + Hover Reveal + Floating Dock)
+  if (ACTIVE_NAV_MODE === 'hybrid_experimental') {
+    return <HybridNavigation />;
   }
 
   // 2. Previous Mode: Right HUD -> Compact Rail -> Floating Top Command Dock
